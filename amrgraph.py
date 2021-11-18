@@ -41,11 +41,53 @@ class AMRNode(dict):
         super(AMRNode, self).__init__(**kwargs)
 
     def __getattr__(self, item):
-        return self[item]
+        if item == "children":
+            children = []
+            for rel_type in self["relations"]:
+                for tail in self["relations"][rel_type]:
+                    children.append(tail)
+            return children
+        else:
+            return self[item]
+
+    def __repr__(self):
+        if self["scope"] is None:
+            return "({},{})".format(self["short"], self["value"])
+        else:
+            return "({},{},{}-{})".format(self["short"], self["value"], self["scope"][0], self["scope"][1])
 
     def add_relation(self, rel_type, tail):
         """Add a relation."""
-        self["relation"].setdefault(rel_type, []).append(tail)
+        self["relations"].setdefault(rel_type, []).append(tail)
+
+    def update_scope(self, index):
+        """Update node scope with a token index."""
+        if self["scope"] is None:
+            self["scope"] = (index, index+1)
+        else:
+            self["scope"] = (min(self["scope"] + (index, )), max(self["scope"] + (index+1, )))
+
+    def update_scope_from_children(self):
+        """Update scope from child nodes."""
+        for child in self.children:
+            if isinstance(child, AMRNode):
+                child.update_scope_from_children()
+        if self["scope"] is not None:
+            start, end = self["scope"]
+        else:
+            start, end = None, None
+        for child in self.children:
+            if isinstance(child, AMRNode) and (child["scope"] is not None):
+                if start is not None:
+                    start = min(start, child["scope"][0])
+                else:
+                    start = child["scope"][0]
+                if end is not None:
+                    end = max(end, child["scope"][1])
+                else:
+                    end = child["scope"][1]
+        if start is not None and end is not None:
+            self["scope"] = (start, end)
 
 
 def _parse_node(node_content, nodes, short2node):
@@ -83,6 +125,16 @@ class AMRGraph(dict):
     def __getattr__(self, item):
         return self[item]
 
+    @property
+    def relations(self):
+        """Return all triples."""
+        rels = []
+        for head in self["nodes"]:
+            for rel_type in head["relations"]:
+                for tail in head["relations"][rel_type]:
+                    rels.append((head, rel_type, tail))
+        return rels
+
     def find_node_by_short(self, short):
         """Find node by short name."""
         if short in self["short2node"]:
@@ -108,7 +160,10 @@ class AMRGraph(dict):
         root = _parse_node(result[0], nodes=nodes, short2node=short2node)
         # Align nodes
         if alignments is not None:
-            pass
+            for idx, short in alignments:
+                node = short2node[short]
+                node.update_scope(idx)
+            root.update_scope_from_children()
         # Build graph
         g = cls(nodes=nodes, short2node=short2node, root=root, tokens=tokens)
         return g

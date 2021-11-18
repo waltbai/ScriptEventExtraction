@@ -38,11 +38,11 @@ def coref_resolution(work_dir, model_path=None):
                 result = model.predict_tokenized(tokenized_document=content)
                 clusters = result["clusters"]
                 result_str = "\n".join(
-                    ["\t".join(["{} {}".format(start, end) for start, end in chain])
+                    ["\t".join(["{} {}".format(start, end+1) for start, end in chain])
                      for chain in clusters])
                 with open(out_fp, "w") as f:
                     f.write(result_str)
-            except (RuntimeError, IndexError):
+            except (RuntimeError, IndexError, ValueError):
                 pass
             pbar.update()
 
