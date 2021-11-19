@@ -1,4 +1,6 @@
 """Definition of AMR graph class."""
+import re
+
 from pyparsing import Literal, Word, printables, Combine, Group, Forward, Suppress, ZeroOrMore
 
 """Parser for AMR.
@@ -112,6 +114,9 @@ def _parse_node(node_content, nodes, short2node):
         return node
 
 
+VERB_NODE_PATTERN = re.compile(r"[^\-]+-\d+")
+
+
 class AMRGraph(dict):
     """AMR graph class."""
 
@@ -134,6 +139,14 @@ class AMRGraph(dict):
                 for tail in head["relations"][rel_type]:
                     rels.append((head, rel_type, tail))
         return rels
+
+    def get_event_nodes(self):
+        """Get event nodes (i.e., verbs)."""
+        nodes = []
+        for node in self["nodes"]:
+            if VERB_NODE_PATTERN.match(node.value):
+                nodes.append(node)
+        return nodes
 
     def find_node_by_short(self, short):
         """Find node by short name."""
@@ -167,3 +180,10 @@ class AMRGraph(dict):
         # Build graph
         g = cls(nodes=nodes, short2node=short2node, root=root, tokens=tokens)
         return g
+
+
+if __name__ == "__main__":
+    with open("test_samples/amr.txt", "r") as f:
+        s = f.read()
+    g = AMRGraph.parse(s)
+    print(g.get_event_nodes())
