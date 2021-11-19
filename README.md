@@ -64,19 +64,3 @@ Step 5: extract events
 Step 6: build script
 
 ```python step_6.py --work_dir <work_dir>```
-
-### Reduction rules of AMR graph
-
-1. Reduce strings
-
-```mermaid
-A(person)-->B(name)
-B-->C["A"]
-B-->D["B"]
-```
-
-Reduce to:
-
-```mermaid
-A(person) --> B["A B"]
-```
