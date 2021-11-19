@@ -1,9 +1,8 @@
-"""Step 5: Event Chain extraction."""
+"""Step 5: Event extraction."""
 import logging
 import os
 
 from amrgraph import AMRGraph
-from common import map_input_output
 from config import CONFIG
 
 
@@ -23,7 +22,7 @@ def event_extraction(work_dir):
     amr_dir = os.path.join(work_dir, "amr")
     align_dir = os.path.join(work_dir, "align")
     coref_dir = os.path.join(work_dir, "coref")
-    event_dir  = os.path.join(work_dir, "event")
+    event_dir = os.path.join(work_dir, "event")
     tokenized_dir = os.path.join(work_dir, "tokenized")
     # Build amr graph
     for subdir in os.listdir(amr_dir):

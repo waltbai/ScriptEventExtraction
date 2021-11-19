@@ -114,7 +114,7 @@ def _parse_node(node_content, nodes, short2node):
         return node
 
 
-VERB_NODE_PATTERN = re.compile(r"[^\-]+-\d+")
+VERB_NODE_PATTERN = re.compile(r".+-\d+")
 
 
 class AMRGraph(dict):
