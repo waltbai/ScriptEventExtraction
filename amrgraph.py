@@ -40,6 +40,7 @@ class AMRNode(dict):
         kwargs.setdefault("relations", {})
         kwargs.setdefault("scope", None)
         kwargs.setdefault("tokens", None)
+        kwargs.setdefault("type", "concept")
         super(AMRNode, self).__init__(**kwargs)
 
     def __getattr__(self, item):
@@ -52,6 +53,9 @@ class AMRNode(dict):
         else:
             return self[item]
 
+    def __setattr__(self, key, value):
+        self[key] = value
+
     def __repr__(self):
         if self["scope"] is None:
             return "({},{})".format(self["short"], self["value"])
@@ -61,6 +65,11 @@ class AMRNode(dict):
     def add_relation(self, rel_type, tail):
         """Add a relation."""
         self["relations"].setdefault(rel_type, []).append(tail)
+
+    def remove_relation(self, rel_type, tail):
+        """Remove a relation."""
+        idx = self["relations"][rel_type].index(tail)
+        del self["relations"][rel_type][idx]
 
     def update_scope(self, index):
         """Update node scope with a token index."""
@@ -127,18 +136,20 @@ class AMRGraph(dict):
         kwargs.setdefault("tokens", None)
         super(AMRGraph, self).__init__(**kwargs)
 
-    def __getattr__(self, item):
-        return self[item]
-
-    @property
     def relations(self):
-        """Return all triples."""
+        """Get relation triples."""
         rels = []
         for head in self["nodes"]:
             for rel_type in head["relations"]:
                 for tail in head["relations"][rel_type]:
                     rels.append((head, rel_type, tail))
         return rels
+
+    def __getattr__(self, item):
+        return self[item]
+
+    def __setattr__(self, key, value):
+        self[key] = value
 
     def get_event_nodes(self):
         """Get event nodes (i.e., verbs)."""
