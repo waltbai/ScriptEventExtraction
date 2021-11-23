@@ -31,6 +31,7 @@ CONCEPT <<= Group(Suppress(LB) + INSTANCE + Group(ZeroOrMore(RELATION)) + Suppre
 ROOT = CONCEPT
 
 
+# TODO: Recommend not to use dict with getattr
 class AMRNode(dict):
     """Node in AMR graph."""
 
