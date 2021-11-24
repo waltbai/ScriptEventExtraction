@@ -41,7 +41,7 @@ def event_extraction(work_dir):
                 for amr_text, align_text, token in zip(amr_texts, align_texts, tokens):
                     align_info = convert_align_info(align_text)
                     token = token.split()
-                    g = AMRGraph.parse(amr_text, align_info)
+                    g = AMRGraph.parse(amr_text, align_info, token)
                     for n in g.nodes:
                         if n.scope is not None:
                             start, end = n.scope

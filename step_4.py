@@ -9,10 +9,6 @@ from config import CONFIG
 from common import map_input_output
 
 
-def coref_a_doc(doc):
-    """Since memory is limited, we can only predict a document via multiple spans."""
-
-
 def coref_resolution(work_dir, model_path=None):
     """Coreference resolution."""
     tokenized_dir = os.path.join(work_dir, "tokenized")

@@ -31,7 +31,12 @@ CONCEPT <<= Group(Suppress(LB) + INSTANCE + Group(ZeroOrMore(RELATION)) + Suppre
 ROOT = CONCEPT
 
 
+VERB_NODE_PATTERN = re.compile(r".+-\d+")
+STATIC_FRAMES = ["have-rel-role-91", "have-org-role-91"]
+
+
 # TODO: Recommend not to use dict with getattr
+# TODO: Scope merging is A BIG PROBLEM!!!
 class AMRNode(dict):
     """Node in AMR graph."""
 
@@ -71,6 +76,15 @@ class AMRNode(dict):
         """Remove a relation."""
         idx = self["relations"][rel_type].index(tail)
         del self["relations"][rel_type][idx]
+
+    def update_type(self):
+        """Update node type."""
+        if VERB_NODE_PATTERN.match(self["value"]):
+            self["type"] = "verb"
+        if self["value"] in STATIC_FRAMES:
+            self["type"] = "static"
+        if self["value"] == "and":
+            self["type"] = "and"
 
     def update_scope(self, index):
         """Update node scope with a token index."""
@@ -124,9 +138,6 @@ def _parse_node(node_content, nodes, short2node):
         return node
 
 
-VERB_NODE_PATTERN = re.compile(r".+-\d+")
-
-
 class AMRGraph(dict):
     """AMR graph class."""
 
@@ -137,17 +148,16 @@ class AMRGraph(dict):
         kwargs.setdefault("tokens", None)
         super(AMRGraph, self).__init__(**kwargs)
 
-    def relations(self):
-        """Get relation triples."""
-        rels = []
-        for head in self["nodes"]:
-            for rel_type in head["relations"]:
-                for tail in head["relations"][rel_type]:
-                    rels.append((head, rel_type, tail))
-        return rels
-
     def __getattr__(self, item):
-        return self[item]
+        if item == "relations":
+            rels = []
+            for head in self["nodes"]:
+                for rel_type in head["relations"]:
+                    for tail in head["relations"][rel_type]:
+                        rels.append((head, rel_type, tail))
+            return rels
+        else:
+            return self[item]
 
     def __setattr__(self, key, value):
         self[key] = value
@@ -156,7 +166,7 @@ class AMRGraph(dict):
         """Get event nodes (i.e., verbs)."""
         nodes = []
         for node in self["nodes"]:
-            if VERB_NODE_PATTERN.match(node.value):
+            if node.type == "verb":
                 nodes.append(node)
         return nodes
 
@@ -168,14 +178,12 @@ class AMRGraph(dict):
             return None
 
     @classmethod
-    def parse(cls, text, alignments=None):
+    def parse(cls, text, alignments=None, tokens=None):
         """Parse AMR graph from text."""
         # Handle comments
         lines = text.splitlines()
         comments = [_ for _ in lines if _.startswith("#")]
         content = [_ for _ in lines if _ not in comments]
-        # Parse comment
-        tokens = None
         # Parse content
         content = "\n".join(content)
         result = ROOT.parseString(content, parseAll=True).asList()
@@ -189,6 +197,8 @@ class AMRGraph(dict):
                 node = short2node[short]
                 node.update_scope(idx)
             root.update_scope_from_children()
+        for n in nodes:
+            n.update_type()
         # Build graph
         g = cls(nodes=nodes, short2node=short2node, root=root, tokens=tokens)
         return g
