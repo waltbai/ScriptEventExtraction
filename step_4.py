@@ -9,19 +9,21 @@ from config import CONFIG
 from common import map_input_output
 
 
-def coref_resolution(work_dir, model_path=None):
+def coref_resolution(work_dir, model_path=None, workers=1, worker_id=0, device=0):
     """Coreference resolution."""
     tokenized_dir = os.path.join(work_dir, "tokenized")
     coref_dir = os.path.join(work_dir, "coref")
     # Load model
     default_model_path = "https://storage.googleapis.com/allennlp-public-models/coref-spanbert-large-2021.03.10.tar.gz"
     model_path = model_path or default_model_path
-    model = Predictor.from_path(model_path, cuda_device=0)
+    model = Predictor.from_path(model_path, cuda_device=device)
     # Map input and output paths
     in_paths, out_paths = map_input_output(tokenized_dir, coref_dir)
+    process_in = [_ for idx, _ in enumerate(in_paths) if (idx % workers) == worker_id]
+    process_out = [_ for idx, _ in enumerate(out_paths) if (idx % workers) == worker_id]
     # Predict
     with tqdm(total=len(in_paths)) as pbar:
-        for in_fp, out_fp in zip(in_paths, out_paths):
+        for in_fp, out_fp in zip(process_in, process_out):
             if os.path.exists(out_fp):
                 pbar.update()
                 continue
@@ -46,5 +48,8 @@ def coref_resolution(work_dir, model_path=None):
 if __name__ == "__main__":
     logging.basicConfig(format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
                         level=logging.INFO)
-    logging.getLogger("allennlp").setLevel(logging.WARNING)
-    coref_resolution(CONFIG.work_dir)
+    logging.getLogger("allennlp").setLevel(logging.CRITICAL)
+    coref_resolution(CONFIG.work_dir,
+                     workers=CONFIG.workers,
+                     worker_id=CONFIG.worker_id,
+                     device=CONFIG.device)

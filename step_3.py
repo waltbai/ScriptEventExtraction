@@ -39,42 +39,46 @@ def batch_parse_amrlib(docs, parser):
     graphs = parser.parse_sents(sents)
     results = []
     for start, offset in spans:
-        results.append("\n".join(graphs[start:start+offset]))
+        # results.append("\n".join(graphs[start:start+offset]))   # for gsii
+        results.append("\n\n".join(graphs[start:start+offset]))     # for t5
     return results
 
 
-def parse(work_dir, batch_size=10):
+def parse(work_dir, batch_size=10, workers=1, worker_id=0, device=0):
     """Parse documents."""
     logger.info("Parsing documents with amr parser")
-    parser = amrlib.load_stog_model(batch_size=5000)
+    # parser = amrlib.load_stog_model(batch_size=5000)    # for gsii
+    parser = amrlib.load_stog_model(device=device)   # for t5
     tokenized_dir = os.path.join(work_dir, "tokenized")
     amr_dir = os.path.join(work_dir, "amr")
     if not os.path.exists(amr_dir):
         os.makedirs(amr_dir)
     in_paths, out_paths = map_input_output(tokenized_dir, amr_dir)
+    process_in = [_ for idx, _ in enumerate(in_paths) if (idx % workers) == worker_id]
+    process_out = [_ for idx, _ in enumerate(out_paths) if (idx % workers) == worker_id]
     # Parse
     error_in_paths = []
     error_out_paths = []
-    tot_num = len(in_paths)
+    tot_num = len(process_in)
     with tqdm(total=tot_num) as pbar:
         for i in range(math.ceil(tot_num / batch_size)):
             start, end = i * batch_size, (i+1) * batch_size
             docs = []
-            for fp in in_paths[start:end]:
+            for fp in process_in[start:end]:
                 with open(fp, "r") as f:
                     content = f.read().splitlines()
                 docs.append(content)
             try:
                 results = batch_parse_amrlib(docs, parser)
                 # results = batch_parse_transition(docs, parser)
-                for idx, fp in enumerate(out_paths[start:end]):
+                for idx, fp in enumerate(process_out[start:end]):
                     with open(fp, "w") as f:
                         f.write(results[idx])
                 pbar.update(batch_size)
             except (AttributeError, RuntimeError, IndexError):
                 # logger.info("Parse error detected.")
-                error_in_paths.extend(in_paths[start:end])
-                error_out_paths.extend(out_paths[start:end])
+                error_in_paths.extend(process_in[start:end])
+                error_out_paths.extend(process_out[start:end])
     # Re-do error batches
     error_files = []
     for fp_i, fp_o in zip(error_in_paths, error_out_paths):
@@ -131,8 +135,11 @@ def align(work_dir):
 if __name__ == "__main__":
     logging.basicConfig(format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
                         level=logging.INFO)
-    logging.getLogger("penman").setLevel(logging.WARNING)
-    logging.getLogger("amrlib").setLevel(logging.WARNING)
-    # parse(CONFIG.work_dir, amr_model)
-    # parse(CONFIG.work_dir, batch_size=10)
+    logging.getLogger("penman").setLevel(logging.CRITICAL)
+    logging.getLogger("amrlib").setLevel(logging.CRITICAL)
+    parse(CONFIG.work_dir,
+          batch_size=10,
+          workers=CONFIG.workers,
+          worker_id=CONFIG.worker_id,
+          device=CONFIG.device)
     align(CONFIG.work_dir)
