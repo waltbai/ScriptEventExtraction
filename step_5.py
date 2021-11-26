@@ -21,7 +21,7 @@ def event_extraction(work_dir):
     """Extract events."""
     amr_dir = os.path.join(work_dir, "amr")
     align_dir = os.path.join(work_dir, "align")
-    coref_dir = os.path.join(work_dir, "coref")
+    # coref_dir = os.path.join(work_dir, "coref")
     event_dir = os.path.join(work_dir, "event")
     tokenized_dir = os.path.join(work_dir, "tokenized")
     # Build amr graph

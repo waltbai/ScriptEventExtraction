@@ -47,6 +47,7 @@ class AMRNode(dict):
         kwargs.setdefault("scope", None)
         kwargs.setdefault("tokens", None)
         kwargs.setdefault("type", "concept")
+        self._span = None
         super(AMRNode, self).__init__(**kwargs)
 
     def __getattr__(self, item):

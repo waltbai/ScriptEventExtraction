@@ -1,7 +1,7 @@
 """Convert amr graph to event structure."""
 import re
 
-from amrgraph import AMRGraph, AMRNode
+from amrgraph_new import AMRGraph, AMRNode
 
 # Reserved relation patterns
 from step_3 import align_graph
@@ -65,6 +65,7 @@ def convert_amr_to_event(graph: AMRGraph):
         for r in e.relations:
             for t in e.relations[r]:
                 start, end = t.scope
+
                 print(e, r, t, " || ", " ".join(tokens[start:end]))
 
 
@@ -78,4 +79,9 @@ if __name__ == "__main__":
     align_s = align_graph(s)
     align = convert_align_info(align_s)
     g = AMRGraph.parse(s, alignments=align, tokens=tokens)
-    convert_amr_to_event(g)
+    for v in g.nodes:
+        print(v)
+        # print(g.find_tokens_by_node(v))
+        print(v.scope)
+        input()
+    # convert_amr_to_event(g)
