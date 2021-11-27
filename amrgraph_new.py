@@ -128,6 +128,7 @@ class AMRNode:
                     self.scope[i] = self.scope[i] or child.scope[i]
 
 
+# TODO: parse amr graph with penman
 def _parse_node(node_content, nodes, short2node, token_num=None):
     """Parse node content."""
     if isinstance(node_content, str):
