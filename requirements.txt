@@ -6,6 +6,6 @@ nltk==3.6.4
 amrlib>=0.5.1
 allennlp==2.8.0
 allennlp_models==2.8.0
-sentencepiece==0.1.96
+sentencepiece>=0.1.91
 pyparsing>=2.4.7
 Penman>=1.2.1

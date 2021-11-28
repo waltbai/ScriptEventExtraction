@@ -7,6 +7,7 @@ import amrlib
 from amrlib.alignments.rbw_aligner import RBWAligner
 from tqdm import tqdm
 
+from amrgraph_penman import align_graph
 from config import CONFIG
 from utils.common import map_input_output
 
@@ -92,19 +93,6 @@ def parse(work_dir, batch_size=10, workers=1, worker_id=0, device=0):
             error_files.append(fp_i)
     logger.info("Totally {} docs failed.".format(len(error_files)))
     logger.info("\n{}".format("\n".join(error_files)))
-
-
-def align_graph(graph):
-    """Align single amr graph."""
-    align_result = RBWAligner.from_string_w_json(graph)
-    ret_val = []
-    # Return in one line, "<index0> <short0>\t<index1> <short1>\t..."
-    for i, t in enumerate(align_result.alignments):
-        if t is not None:
-            # t.triple: (short, ":instance", name)
-            ret_val.append((i, t.triple[0]))
-    ret_val = "\t".join(["{} {}".format(i, s) for i, s in ret_val])
-    return ret_val
 
 
 def align(work_dir):

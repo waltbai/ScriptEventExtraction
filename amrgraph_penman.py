@@ -4,6 +4,7 @@ import re
 import penman
 import spacy
 from amrlib.alignments.rbw_aligner import RBWAligner
+from penman.models import noop
 
 VERB_FRAME_PATTERN = re.compile(r".+-\d+")
 STATIC_FRAMES = ["have-rel-role-91", "have-org-role-91"]
@@ -12,6 +13,19 @@ CONJUNCTION_FRAMES = ["and"]
 _exclude_components = ["tok2vec", "tagger", "parser",
                        "attribute_ruler", "lemmatizer", "ner"]
 TOKENIZER = spacy.load("en_core_web_sm", exclude=_exclude_components)
+
+
+def align_graph(graph):
+    """Align single amr graph."""
+    align_result = RBWAligner.from_string_w_json(graph)
+    ret_val = []
+    # Return in one line, "<index0> <short0>\t<index1> <short1>\t..."
+    for i, t in enumerate(align_result.alignments):
+        if t is not None:
+            # t.triple: (short, ":instance", name)
+            ret_val.append((i, t.triple[0]))
+    # ret_val = "\t".join(["{} {}".format(i, s) for i, s in ret_val])
+    return ret_val
 
 
 # We define amr node/graph class instead of
@@ -68,17 +82,22 @@ class AMRNode:
     @property
     def span(self):
         """Return rightmost continuous scope."""
-        # Continuity is a really strong constraint.
-        # Try discrete tolerant = 1
         start, end = None, None
-        # TODO
+        # TODO: Continuity is a really strong constraint.
+        #   Try discrete tolerant = 1
+        skip = 0
+        tolerant = 1
         for i in range(len(self.scope))[::-1]:
             if end is None and self.scope[i]:
                 end = i + 1
-            if end is not None and self.scope[i]:
-                start = i
-            if start is not None and end is not None and not self.scope[i]:
-                break
+            if end is not None:
+                if self.scope[i]:
+                    skip = 0
+                    start = i
+                elif skip < tolerant:
+                    skip += 1
+                else:
+                    break
         return start, end
 
     def add_relation(self, rel_type, tail):
@@ -106,6 +125,9 @@ class AMRNode:
             if isinstance(child, AMRNode):
                 for i in range(len(self.scope)):
                     self.scope[i] = self.scope[i] or child.scope[i]
+        # print(self)
+        # print(self.scope)
+        # input()
 
 
 class AMRGraph:
@@ -160,7 +182,8 @@ class AMRGraph:
     @classmethod
     def parse(cls, text, alignments=None, tokens=None):
         """Parse AMR graph from text."""
-        g = penman.decode(text)
+        # TODO: forbid auto-transform!
+        g = penman.decode(text, model=noop.model)
         # Get tokens
         if tokens is None and "snt" in g.metadata:
             tokens = [_.text for _ in TOKENIZER(g.metadata["snt"])]
@@ -189,16 +212,26 @@ class AMRGraph:
         # Construct graph
         root = id2node[g.top]
         graph = cls(root=root, nodes=nodes, id2node=id2node, tokens=tokens)
-        # TODO: alignment
+        # Compute scope
+        if alignments is None:
+            alignments = align_graph(text)
+        else:
+            pass
+        for idx, id_ in alignments:
+            graph.find_node_by_id(id_).update_scope(idx)
+        graph.root.update_scope_from_children()
         return graph
 
 
 if __name__ == "__main__":
-    with open("test_samples/amr_with_align.txt", "r") as f:
+    with open("test_samples/amr.txt", "r") as f:
         s = f.read()
     g = AMRGraph.parse(s)
-    for h, r, t in g.relations:
-        print(h, r, t)
+    for v in g.nodes:
+        print(v)
+        print(" ".join(g.find_tokens_by_span(v.span)))
+    # for h, r, t in g.relations:
+    #     print(h, r, t)
     # align = RBWAligner.from_penman_w_json(g)
     # for t in align.alignments:
     #     print(t)
