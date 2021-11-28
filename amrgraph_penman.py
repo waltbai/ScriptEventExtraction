@@ -1,51 +1,31 @@
 """Definition of AMR graph class."""
 import re
 
-from pyparsing import Literal, Word, printables, Combine, Group, Forward, Suppress, ZeroOrMore
-
-"""Parser for AMR.
-
-BNF:
-
-LB := "("
-RB := ")"
-SLASH := "/"
-SPACE := " "
-TERMINATE := SPACE | LB | RB | SLASH
-ROLE := ":" NO_TERMINATE
-INSTANCE := NO_TERMINATE SLASH NO_TERMINATE
-CONCEPT := LB INSTANCE RELATION* RB
-RELATION := ROLE TAIL
-TAIL := NO_TERMINATE | CONCEPT
-"""
-
-LB, RB, SLASH = map(Literal, "()/")
-NO_TERMINTATE = Word(printables, excludeChars=" ()/")
-ROLE = Combine(":" + NO_TERMINTATE)
-INSTANCE = Group(NO_TERMINTATE + SLASH + NO_TERMINTATE)
-TAIL = Forward()
-CONCEPT = Forward()
-RELATION = Group(ROLE + TAIL)
-TAIL <<= NO_TERMINTATE | CONCEPT
-CONCEPT <<= Group(Suppress(LB) + INSTANCE + Group(ZeroOrMore(RELATION)) + Suppress(RB))
-ROOT = CONCEPT
-
+import penman
+import spacy
+from amrlib.alignments.rbw_aligner import RBWAligner
 
 VERB_FRAME_PATTERN = re.compile(r".+-\d+")
 STATIC_FRAMES = ["have-rel-role-91", "have-org-role-91"]
 CONJUNCTION_FRAMES = ["and"]
+# Tokenizer
+_exclude_components = ["tok2vec", "tagger", "parser",
+                       "attribute_ruler", "lemmatizer", "ner"]
+TOKENIZER = spacy.load("en_core_web_sm", exclude=_exclude_components)
 
 
+# We define amr node/graph class instead of
+#   directly using penman graph for extensibility.
 class AMRNode:
     """Node in AMR graph."""
 
     def __init__(self,
-                 short="",
+                 id_="",
                  value="",
                  relations=None,
                  token_num=None):
         # Accessible
-        self.short = short
+        self.id = id_
         self.value = value
         self.relations = relations or {}
         self.scope = [False] * (token_num or 0)
@@ -64,9 +44,9 @@ class AMRNode:
     def __repr__(self):
         start, end = self.span
         if start is None or end is None:
-            return f"({self.short},{self.value})"
+            return f"({self.id},{self.value})"
         else:
-            return f"({self.short},{self.value},{start}-{end})"
+            return f"({self.id},{self.value},{start}-{end})"
 
     @property
     def children(self):
@@ -128,42 +108,16 @@ class AMRNode:
                     self.scope[i] = self.scope[i] or child.scope[i]
 
 
-# TODO: parse amr graph with penman
-def _parse_node(node_content, nodes, short2node, token_num=None):
-    """Parse node content."""
-    if isinstance(node_content, str):
-        # Value or short name
-        if node_content in short2node:
-            return short2node[node_content]
-        else:
-            if node_content.startswith("\"") and node_content.endswith("\""):
-                node_content = node_content[1:-1]
-            return node_content
-    else:
-        short, _, value = node_content[0]
-        relations = node_content[1]
-        node = AMRNode(short=short, value=value, token_num=token_num)
-        short2node.setdefault(short, node)
-        nodes.append(node)
-        for relation in relations:
-            new_node = _parse_node(relation[1],
-                                   nodes=nodes,
-                                   short2node=short2node,
-                                   token_num=token_num)
-            node.add_relation(relation[0], new_node)
-        return node
-
-
 class AMRGraph:
     """AMR graph class."""
 
     def __init__(self,
                  nodes=None,
-                 short2node=None,
+                 id2node=None,
                  root=None,
                  tokens=None):
         self.nodes = nodes or []
-        self.short2node = short2node or {}
+        self.id2node = id2node or {}
         self.root = root or None
         self.tokens = tokens or []
 
@@ -181,10 +135,10 @@ class AMRGraph:
         """Get event nodes (i.e., verbs)."""
         return [_ for _ in self.nodes if _.type == "verb"]
 
-    def find_node_by_short(self, short):
-        """Find node by short name."""
-        if short in self.short2node:
-            return self.short2node[short]
+    def find_node_by_id(self, short):
+        """Find node by id."""
+        if short in self.id2node:
+            return self.id2node[short]
         else:
             return None
 
@@ -206,41 +160,45 @@ class AMRGraph:
     @classmethod
     def parse(cls, text, alignments=None, tokens=None):
         """Parse AMR graph from text."""
-        # Handle comments
-        lines = text.splitlines()
-        comments = [_ for _ in lines if _.startswith("#")]
-        content = [_ for _ in lines if _ not in comments]
+        g = penman.decode(text)
         # Get tokens
+        if tokens is None and "snt" in g.metadata:
+            tokens = [_.text for _ in TOKENIZER(g.metadata["snt"])]
+        else:
+            pass
         if tokens is not None:
             token_num = len(tokens)
         else:
-            sent = [_ for _ in comments if _.startswith("# ::snt")]
-            if len(sent) > 0:
-                tokens = sent[0].replace("# ::snt", "").strip().split()
-                token_num = len(tokens)
-            else:
-                token_num = None
-        # Parse graph text
-        content = "\n".join(content)
-        parse_result = ROOT.parseString(content, parseAll=True).asList()
-        # Build graph
+            token_num = None
+        # Construct nodes
         nodes = []
-        short2node = {}
-        root = _parse_node(parse_result[0],
-                           nodes=nodes,
-                           short2node=short2node,
-                           token_num=token_num)
-        # Update alignment information
-        if alignments is not None and tokens is not None:
-            for idx, short in alignments:
-                node = short2node[short]
-                node.update_scope(idx)
-            root.update_scope_from_children()
-        return cls(nodes=nodes, short2node=short2node, root=root, tokens=tokens)
+        id2node = {}
+        for id_, _, value in g.instances():
+            node = AMRNode(id_=id_, value=value, token_num=token_num)
+            nodes.append(node)
+            id2node.setdefault(id_, node)
+        # Construct relations
+        for h, r, t in g.edges():
+            head = id2node[h]
+            tail = id2node[t]
+            head.add_relation(r, tail)
+        # Construct attributes
+        for h, r, t in g.attributes():
+            head = id2node[h]
+            head.add_relation(r, t)
+        # Construct graph
+        root = id2node[g.top]
+        graph = cls(root=root, nodes=nodes, id2node=id2node, tokens=tokens)
+        # TODO: alignment
+        return graph
 
 
 if __name__ == "__main__":
-    with open("test_samples/amr.txt", "r") as f:
+    with open("test_samples/amr_with_align.txt", "r") as f:
         s = f.read()
     g = AMRGraph.parse(s)
-
+    for h, r, t in g.relations:
+        print(h, r, t)
+    # align = RBWAligner.from_penman_w_json(g)
+    # for t in align.alignments:
+    #     print(t)

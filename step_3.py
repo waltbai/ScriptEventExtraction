@@ -8,7 +8,7 @@ from amrlib.alignments.rbw_aligner import RBWAligner
 from tqdm import tqdm
 
 from config import CONFIG
-from common import map_input_output
+from utils.common import map_input_output
 
 logger = logging.getLogger(__name__)
 

@@ -2,7 +2,7 @@
 import logging
 import os
 
-from amrgraph import AMRGraph
+from utils.amrgraph import AMRGraph
 from config import CONFIG
 
 

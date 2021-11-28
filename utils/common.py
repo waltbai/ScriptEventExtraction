@@ -14,3 +14,6 @@ def map_input_output(in_dir, out_dir):
             in_paths.append(os.path.join(in_subdir, fn))
             out_paths.append(os.path.join(out_subdir, fn))
     return in_paths, out_paths
+
+
+

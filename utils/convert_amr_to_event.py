@@ -1,7 +1,7 @@
 """Convert amr graph to event structure."""
 import re
 
-from amrgraph_new import AMRGraph, AMRNode
+from utils.amrgraph_new import AMRGraph, AMRNode
 
 # Reserved relation patterns
 from step_3 import align_graph
@@ -70,7 +70,7 @@ def convert_amr_to_event(graph: AMRGraph):
 
 
 if __name__ == "__main__":
-    with open("test_samples/amr.txt", "r") as f:
+    with open("../test_samples/amr.txt", "r") as f:
         s = f.read()
     tokens_s = "With the nation 's attention riveted again on a Los Angeles courtroom , " \
                "a knife dealer testified that O.J. Simpson bought a 15 - inch knife " \

@@ -6,7 +6,7 @@ from allennlp.predictors import Predictor
 from tqdm import tqdm
 
 from config import CONFIG
-from common import map_input_output
+from utils.common import map_input_output
 
 
 def coref_resolution(work_dir, model_path=None, workers=1, worker_id=0, device=0):

@@ -8,7 +8,7 @@ import spacy
 from tqdm import tqdm
 
 from config import CONFIG
-from common import map_input_output
+from utils.common import map_input_output
 
 logger = logging.getLogger(__name__)
 
@@ -63,7 +63,7 @@ def batch_tokenize_spacy(docs, nlp):
 def tokenize(work_dir, batch_size=100):
     """Tokenize documents."""
     exclude_components = ["tok2vec", "tagger", "parser", "attribute_ruler", "lemmatizer", "ner"]
-    nlp = spacy.load("en_core_web_sm", exclude=exclude_components)
+    nlp = spacy.load("en_core_web_lg", exclude=exclude_components)
     nlp.enable_pipe("senter")
     logger.info("Tokenizer loaded.")
     # Record all documents

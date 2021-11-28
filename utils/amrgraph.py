@@ -206,7 +206,7 @@ class AMRGraph(dict):
 
 
 if __name__ == "__main__":
-    with open("test_samples/amr.txt", "r") as f:
+    with open("../test_samples/amr.txt", "r") as f:
         s = f.read()
     g = AMRGraph.parse(s)
     print(g.get_event_nodes())
