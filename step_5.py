@@ -2,8 +2,8 @@
 import logging
 import os
 
-from utils.amrgraph import AMRGraph
 from config import CONFIG
+from utils.amrgraph import AMRGraph
 
 
 def convert_align_info(align_text):

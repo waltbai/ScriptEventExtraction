@@ -4,10 +4,9 @@ import math
 import os
 
 import amrlib
-from amrlib.alignments.rbw_aligner import RBWAligner
 from tqdm import tqdm
 
-from amrgraph_penman import align_graph
+from utils.amrgraph import align_graph
 from config import CONFIG
 from utils.common import map_input_output
 

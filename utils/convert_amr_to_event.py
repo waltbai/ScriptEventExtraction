@@ -1,12 +1,8 @@
 """Convert amr graph to event structure."""
 import re
 
-from utils.amrgraph_new import AMRGraph, AMRNode
 
 # Reserved relation patterns
-from step_3 import align_graph
-from step_5 import convert_align_info
-
 RESERVED_RELATIONS = {
     ":ARG0", ":ARG1", ":ARG2", ":ARG3", ":ARG4",    # core roles
     # ":name",    # filter name
@@ -34,7 +30,7 @@ def filter_relations(graph):
 def split_and_node(graph):
     """Split and node into different relations."""
     for h, r, t in graph.relations:
-        if isinstance(t, AMRNode) and t.value == "and":
+        if not isinstance(t, str) and t.value == "and":
             for new_t in t.children:
                 h.add_relation(r, new_t)
             h.remove_relation(r, t)
@@ -53,35 +49,31 @@ def add_reverse_of_argn_of(graph):
             # h.remove_relation(r, t)
 
 
+def recognize_modalities(graph):
+    """Remove modality verbs."""
+    for h, r, t in graph.relations:
+        if h.type == "verb" and t.type == "verb":
+            h.type = "modality"
+
+
 # Main
-def convert_amr_to_event(graph: AMRGraph):
+def convert_amr_to_event(graph):
     """Convert amr graph to event structure."""
     # Convert graph
-    split_and_node(graph)
-    add_reverse_of_argn_of(graph)
     filter_relations(graph)
+    split_and_node(graph)
+    recognize_modalities(graph)
+    add_reverse_of_argn_of(graph)
     # # Export events
+    events = []
     for e in graph.get_event_nodes():
+        event = {
+            "pb-frame": e.value,
+            "fn-frame": "",
+            "roles": {}
+        }
         for r in e.relations:
             for t in e.relations[r]:
-                start, end = t.scope
+                start, end = t.span
+                head_idx = end
 
-                print(e, r, t, " || ", " ".join(tokens[start:end]))
-
-
-if __name__ == "__main__":
-    with open("../test_samples/amr.txt", "r") as f:
-        s = f.read()
-    tokens_s = "With the nation 's attention riveted again on a Los Angeles courtroom , " \
-               "a knife dealer testified that O.J. Simpson bought a 15 - inch knife " \
-               "five weeks before the slashing deaths of his ex - wife and her friend ."
-    tokens = tokens_s.split()
-    align_s = align_graph(s)
-    align = convert_align_info(align_s)
-    g = AMRGraph.parse(s, alignments=align, tokens=tokens)
-    for v in g.nodes:
-        print(v)
-        # print(g.find_tokens_by_node(v))
-        print(v.scope)
-        input()
-    # convert_amr_to_event(g)

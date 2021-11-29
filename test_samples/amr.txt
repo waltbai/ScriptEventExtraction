@@ -4,41 +4,30 @@
 # ::ner_iob ["O", "O", "O", "O", "O", "O", "O", "O", "O", "B", "I", "O", "O", "O", "O", "O", "O", "O", "B", "I", "O", "O", "B", "I", "I", "O", "B", "I", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O"]
 # ::pos_tags ["IN", "DT", "NN", "POS", "NN", "VBN", "RB", "IN", "DT", "NNP", "NNP", "NN", ",", "DT", "NN", "NN", "VBD", "IN", "NNP", "NNP", "VBD", "DT", "CD", "HYPH", "NN", "NN", "CD", "NNS", "IN", "DT", "VBG", "NNS", "IN", "PRP$", "NN", "NN", "NN", "CC", "PRP$", "NN", "."]
 # ::lemmas ["with", "the", "nation", "'s", "attention", "rivet", "again", "on", "a", "Los", "Angeles", "courtroom", ",", "a", "knife", "dealer", "testify", "that", "O.J.", "Simpson", "buy", "a", "15", "-", "inch", "knife", "five", "weeks", "before", "the", "slash", "death", "of", "his", "ex", "-", "wife", "and", "her", "friend", "."]
-(t / testify-01
-      :ARG0 (p / person
-            :ARG0-of (d / deal-01
-                  :ARG1 (k / knife)))
-      :ARG1 (b / buy-01
-            :ARG0 (p2 / person
-                  :name (n / name
-                        :op1 "O.J."
-                        :op2 "Simpson"))
-            :ARG1 (k2 / knife
-                  :mod (d2 / distance-quantity
-                        :quant 15
-                        :unit (ii / inch)))
-            :time (b2 / before
-                  :op1 (d3 / die-01
-                        :ARG1 (a / and
-                              :op1 (p3 / person
-                                    :ARG0-of (h / have-rel-role-91
-                                          :ARG1 p
-                                          :ARG2 (w / wife)
-                                          :time (e / ex)))
-                              :op2 (p4 / person
-                                    :ARG0-of (h2 / have-rel-role-91
-                                          :ARG1 p
-                                          :ARG2 (f / friend))))
-                        :manner (s / slash-01))
-                  :duration (t2 / temporal-quantity
-                        :quant 5
-                        :unit (w2 / week))))
-      :time (r / rivet-01
-            :ARG1 (a2 / attend-02
-                  :ARG0 (n2 / nation))
-            :ARG2 (c / courtroom
-                  :location (c2 / city
-                        :name (n3 / name
-                              :op1 "Los"
-                              :op2 "Angeles")))
-            :mod (a3 / again)))
+(t0 / testify-01
+    :time (b1 / before
+        :quant (t1 / temporal-quantity
+            :unit (w0 / week)
+            :quant 5 )
+        :op1 (d1 / die-01
+            :ARG1 (a2 / and)))
+            :time (a0 / attend-02
+                :location (c0 / courtroom
+                    :mod (p2 / person))
+            :mod (a1 / again)
+            :ARG0 (n0 / nation))
+    :ARG0 (p0 / person
+        :ARG0-of (d0 / deal-01
+            :ARG2 (k1 / knife)))
+    :ARG1 (b0 / buy-01
+        :ARG0 (p1 / person
+            :name (n1 / name
+                :op2 "Simpson"
+                :op1 "O.J." )
+            :ARG0-of (h0 / have-rel-role-91
+                :time (e0 / ex)
+                :ARG2 (w1 / wife)))
+        :ARG1 (k0 / knife
+            :mod (d2 / distance-quantity
+                :unit (i0 / inch)
+                :quant 15 ))))
