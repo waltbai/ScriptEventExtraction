@@ -49,10 +49,13 @@ def add_reverse_of_argn_of(graph):
             # h.remove_relation(r, t)
 
 
+CORE_ROLE = re.compile(r":ARG\d+")
+
+
 def recognize_modalities(graph):
     """Remove modality verbs."""
     for h, r, t in graph.relations:
-        if h.type == "verb" and t.type == "verb":
+        if h.type == "verb" and t.type == "verb" and CORE_ROLE.match(r):
             h.type = "modality"
 
 
@@ -70,10 +73,18 @@ def convert_amr_to_event(graph):
         event = {
             "pb-frame": e.value,
             "fn-frame": "",
-            "roles": {}
+            "verb_idx": e.pos,
+            "roles": []
         }
         for r in e.relations:
             for t in e.relations[r]:
-                start, end = t.span
-                head_idx = end
-
+                relation_instance = {
+                    "role": r,
+                    "concept": t.value,
+                    "value": graph.find_tokens_by_span(t.span),
+                    "span": t.span,
+                    "head_idx": t.span[1],
+                }
+                event["roles"].append(relation_instance)
+        events.append(event)
+    return events

@@ -2,8 +2,12 @@
 import logging
 import os
 
+import penman
+from amrlib.alignments.rbw_aligner import RBWAligner
+
 from config import CONFIG
 from utils.amrgraph import AMRGraph
+from utils.convert_amr_to_event import convert_amr_to_event
 
 
 def convert_align_info(align_text):
@@ -24,6 +28,8 @@ def event_extraction(work_dir):
     # coref_dir = os.path.join(work_dir, "coref")
     event_dir = os.path.join(work_dir, "event")
     tokenized_dir = os.path.join(work_dir, "tokenized")
+    # Load coreference chain
+    pass
     # Build amr graph
     for subdir in os.listdir(amr_dir):
         base_amr_dir = os.path.join(amr_dir, subdir)
@@ -42,17 +48,15 @@ def event_extraction(work_dir):
                     align_info = convert_align_info(align_text)
                     token = token.split()
                     g = AMRGraph.parse(amr_text, align_info, token)
-                    for n in g.nodes:
-                        if n.scope is not None:
-                            start, end = n.scope
-                            print(n, "-->", "\"", " ".join(token[start:end]), "\"")
-                        else:
-                            print(n)
-                    input()
+                    print(amr_text)
+                    for event in convert_amr_to_event(graph=g):
+                        print(event)
+                        input()
 
 
 if __name__ == "__main__":
     logging.basicConfig(format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
                         level=logging.INFO)
+    logging.getLogger("penman").setLevel(logging.CRITICAL)
     logging.getLogger("allennlp").setLevel(logging.WARNING)
     event_extraction(CONFIG.work_dir)

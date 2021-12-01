@@ -13,21 +13,6 @@ from utils.common import map_input_output
 logger = logging.getLogger(__name__)
 
 
-# def batch_parse_transition(docs, parser):
-#     """Parse documents in batch."""
-#     spans = []
-#     sents = []
-#     for doc in docs:
-#         spans.append((len(spans), len(doc)))
-#         sents.extend(doc)
-#     # Use 16G V100
-#     results = parser.parse_sentences(sents, batch_size=256, roberta_batch_size=30)
-#     new_results = []
-#     for start, offset in spans:
-#         new_results.append("\n".join(results[0][start:start+offset]))
-#     return new_results
-
-
 def batch_parse_amrlib(docs, parser):
     """Parse documents in batch."""
     # GSII is much faster
@@ -40,7 +25,7 @@ def batch_parse_amrlib(docs, parser):
     results = []
     for start, offset in spans:
         # results.append("\n".join(graphs[start:start+offset]))   # for gsii
-        results.append("\n\n".join(graphs[start:start+offset]))     # for t5
+        results.append("\n\n".join(graphs[start:start+offset]))   # for t5 and spring
     return results
 
 
@@ -48,18 +33,25 @@ def parse(work_dir, batch_size=10, workers=1, worker_id=0, device=0):
     """Parse documents."""
     logger.info("Parsing documents with amr parser")
     # parser = amrlib.load_stog_model(batch_size=5000)    # for gsii
-    parser = amrlib.load_stog_model(device=device)   # for t5
+    parser = amrlib.load_stog_model(device=device)   # for t5 and spring
     tokenized_dir = os.path.join(work_dir, "tokenized")
     amr_dir = os.path.join(work_dir, "amr")
     if not os.path.exists(amr_dir):
         os.makedirs(amr_dir)
     in_paths, out_paths = map_input_output(tokenized_dir, amr_dir)
-    process_in = [_ for idx, _ in enumerate(in_paths) if (idx % workers) == worker_id]
-    process_out = [_ for idx, _ in enumerate(out_paths) if (idx % workers) == worker_id]
+    in_paths = [_ for idx, _ in enumerate(in_paths) if (idx % workers) == worker_id]
+    out_paths = [_ for idx, _ in enumerate(out_paths) if (idx % workers) == worker_id]
+    # Filter parsed docs
+    process_in, process_out = [], []
+    for fin, fout in zip(in_paths, out_paths):
+        if not os.path.exists(fout):
+            process_in.append(fin)
+            process_out.append(fout)
     # Parse
     error_in_paths = []
     error_out_paths = []
     tot_num = len(process_in)
+    success_num = 0
     with tqdm(total=tot_num) as pbar:
         for i in range(math.ceil(tot_num / batch_size)):
             start, end = i * batch_size, (i+1) * batch_size
@@ -74,8 +66,9 @@ def parse(work_dir, batch_size=10, workers=1, worker_id=0, device=0):
                 for idx, fp in enumerate(process_out[start:end]):
                     with open(fp, "w") as f:
                         f.write(results[idx])
+                        success_num += 1
                 pbar.update(batch_size)
-            except (AttributeError, RuntimeError, IndexError):
+            except (AttributeError, RuntimeError, IndexError, TypeError):
                 # logger.info("Parse error detected.")
                 error_in_paths.extend(process_in[start:end])
                 error_out_paths.extend(process_out[start:end])
@@ -88,9 +81,11 @@ def parse(work_dir, batch_size=10, workers=1, worker_id=0, device=0):
             results = batch_parse_amrlib([content], parser)
             with open(fp_o, "w") as f:
                 f.write(results[0])
-        except (AttributeError, RuntimeError, IndexError):
+                success_num += 1
+        except (AttributeError, RuntimeError, IndexError, TypeError):
             error_files.append(fp_i)
-    logger.info("Totally {} docs failed.".format(len(error_files)))
+    logger.info("Totally {} docs succeeded, {} failed.".format(
+        success_num, len(error_files)))
     logger.info("\n{}".format("\n".join(error_files)))
 
 

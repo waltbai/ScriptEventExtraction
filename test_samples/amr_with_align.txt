@@ -33,10 +33,10 @@
                   :duration (t2 / temporal-quantity
                         :quant 5
                         :unit (w2 / week))))
-      :time (r / rivet-01~e.5
-            :ARG1 (a2 / attend-02~e.4
-                  :ARG0 (n2 / nation~e.2))
-            :ARG2 (c / courtroom~e.11
+      :time (r / rivet-01
+            :ARG1 (a2 / attend-02
+                  :ARG0 (n2 / nation))
+            :ARG2 (c / courtroom
                   :location (c2 / city
                         :name (n3 / name
                               :op1 "Los"
