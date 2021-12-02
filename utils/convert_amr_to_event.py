@@ -3,6 +3,8 @@ import re
 
 
 # Reserved relation patterns
+from utils.event import Event
+
 RESERVED_RELATIONS = {
     ":ARG0", ":ARG1", ":ARG2", ":ARG3", ":ARG4",    # core roles
     # ":name",    # filter name
@@ -60,7 +62,7 @@ def recognize_modalities(graph):
 
 
 # Main
-def convert_amr_to_event(graph):
+def convert_amr_to_events(graph):
     """Convert amr graph to event structure."""
     # Convert graph
     filter_relations(graph)
@@ -70,21 +72,24 @@ def convert_amr_to_event(graph):
     # # Export events
     events = []
     for e in graph.get_event_nodes():
-        event = {
-            "pb-frame": e.value,
-            "fn-frame": "",
-            "verb_idx": e.pos,
-            "roles": []
-        }
+        pb_frame = e.value
+        verb_pos = e.pos
+        event = Event(
+            pb_frame=pb_frame,
+            verb_pos=verb_pos)
         for r in e.relations:
             for t in e.relations[r]:
-                relation_instance = {
-                    "role": r,
-                    "concept": t.value,
-                    "value": graph.find_tokens_by_span(t.span),
-                    "span": t.span,
-                    "head_idx": t.span[1],
-                }
-                event["roles"].append(relation_instance)
+                role = r
+                concept = t.value
+                span = t.span
+                head_pos = span[1] if span is not None else None
+                value = graph.find_tokens_by_span(span)
+                event.add_role(
+                    role=role,
+                    concept=concept,
+                    value=value,
+                    span=span,
+                    head_pos=head_pos
+                )
         events.append(event)
     return events

@@ -19,8 +19,14 @@ def coref_resolution(work_dir, model_path=None, workers=1, worker_id=0, device=0
     model = Predictor.from_path(model_path, cuda_device=device)
     # Map input and output paths
     in_paths, out_paths = map_input_output(tokenized_dir, coref_dir)
-    process_in = [_ for idx, _ in enumerate(in_paths) if (idx % workers) == worker_id]
-    process_out = [_ for idx, _ in enumerate(out_paths) if (idx % workers) == worker_id]
+    in_paths = [_ for idx, _ in enumerate(in_paths) if (idx % workers) == worker_id]
+    out_paths = [_ for idx, _ in enumerate(out_paths) if (idx % workers) == worker_id]
+    # Filter parsed docs
+    process_in, process_out = [], []
+    for fin, fout in zip(in_paths, out_paths):
+        if not os.path.exists(fout):
+            process_in.append(fin)
+            process_out.append(fout)
     # Predict
     with tqdm(total=len(in_paths)) as pbar:
         for in_fp, out_fp in zip(process_in, process_out):
