@@ -107,6 +107,7 @@ def align(work_dir):
             align_results = []
             for graph_string in graphs:
                 result = align_graph(graph_string)
+                result = ret_val = "\t".join(["{} {}".format(i, s) for i, s in result])
                 align_results.append(result)
             with open(out_fp, "w") as f:
                 f.write("\n".join(align_results))
