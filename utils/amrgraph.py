@@ -4,6 +4,7 @@ import re
 import penman
 import spacy
 from amrlib.alignments.rbw_aligner import RBWAligner
+from amrlib.graph_processing.annotator import add_lemmas
 from penman.models import noop
 
 VERB_FRAME_PATTERN = re.compile(r".+-\d+")
@@ -17,7 +18,8 @@ TOKENIZER = spacy.load("en_core_web_sm", exclude=_exclude_components)
 
 def align_graph(graph):
     """Align single amr graph."""
-    align_result = RBWAligner.from_string_w_json(graph)
+    penman_graph = add_lemmas(graph, snt_key='snt')
+    align_result = RBWAligner.from_penman_w_json(penman_graph)
     ret_val = []
     # Return in one line, "<index0> <short0>\t<index1> <short1>\t..."
     for i, t in enumerate(align_result.alignments):
