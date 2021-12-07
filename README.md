@@ -50,7 +50,7 @@ The main arguments for each step are:
 ### Instructions
 Step 1: extract documents
 
-```python step_1.py --corp_dir <corp_dir> --work_dir <work_dir>```
+```python step_1.py --corp_dir <corp_dir> --work_dir <work_dir> --start_year <start_year> --end_year <end_year>```
 
 Step 2: tokenize documents
 

@@ -61,7 +61,7 @@ def extract_documents(corp_dir, work_dir, start_year=1994, end_year=2004):
                 # doc counter
                 total_docs += 1
             pbar.update(1)
-    logger.info("Totally {} docs extracted and tokenized.".format(total_docs))
+    logger.info("Totally {} docs extracted.".format(total_docs))
 
 
 if __name__ == "__main__":
