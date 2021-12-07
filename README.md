@@ -7,7 +7,7 @@ Then, it utilizes a coreference resolution tool to find coreferred entities.
 Finally, events are structured into graph/sequences via the coreference information.
 
 ## Corpus
-This code use NYT portion of Gigaword Corpus as input.
+This code use NYT portion of Gigaword Corpus from year 1994 to 2004 as input.
 The corpus can be found in [LDC](https://catalog.ldc.upenn.edu/LDC2011T07).
 
 ## Installation
@@ -19,11 +19,13 @@ to install dependencies.
 ### Models
 Download english model for spacy:
 
-```python -m spacy download en_core_web_sm```
+```bash
+python -m spacy download en_core_web_sm
+```
 
 Download wordnet and wordnet_ic for nltk:
 
-```
+```python
 >>> import nltk
 >>> nltk.download("wordnet")
 >>> nltk.download("wordnet_ic")
@@ -38,6 +40,11 @@ The main arguments for each step are:
 ```
 --corp_dir: the decompressed directory of gigaword corpus
 --work_dir: the directory to store dataset
+--start_year: the start year of the corpus, used only in step 1
+--end_year: the end year of the corpus, used only in step 1
+--workers: total number of processors, used in step 3 and 4
+--worker_id: the worker id of this processor, used in step 3 and 4
+--device: the cuda device used by this processor, used in step 3 and 4
 ```
 
 ### Instructions
@@ -51,11 +58,11 @@ Step 2: tokenize documents
 
 Step 3: parse documents with amr parser
 
-```python step_3.py --work_dir <work_dir>```
+```python step_3.py --work_dir <work_dir> --workers <workers> --worker_id <worker_id> --device <device>```
 
 Step 4: coreference resolution
 
-```python step_4.py --work_dir <work_dir>```
+```python step_4.py --work_dir <work_dir> --workers <workers> --worker_id <worker_id> --device <device>```
 
 Step 5: extract events
 
