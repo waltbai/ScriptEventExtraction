@@ -28,10 +28,12 @@ def qualified_files(file_list, start_year=1994, end_year=2004):
     return result
 
 
-def extract_documents(corp_dir, work_dir):
+def extract_documents(corp_dir, work_dir, start_year=1994, end_year=2004):
     """Extract documents."""
     gz_dir = os.path.join(corp_dir, "data/nyt_eng")
-    gz_list = qualified_files(os.listdir(gz_dir), end_year=1994)
+    gz_list = qualified_files(os.listdir(gz_dir),
+                              start_year=start_year,
+                              end_year=end_year)
     # extract documents
     total_docs = 0
     raw_dir = os.path.join(work_dir, "raw")
@@ -65,4 +67,6 @@ def extract_documents(corp_dir, work_dir):
 if __name__ == "__main__":
     logging.basicConfig(format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
                         level=logging.INFO)
-    extract_documents(corp_dir=CONFIG.corp_dir, work_dir=CONFIG.work_dir)
+    extract_documents(corp_dir=CONFIG.corp_dir, work_dir=CONFIG.work_dir,
+                      start_year=CONFIG.start_year,
+                      end_year=CONFIG.end_year)

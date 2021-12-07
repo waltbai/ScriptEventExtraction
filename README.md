@@ -26,9 +26,9 @@ python -m spacy download en_core_web_sm
 Download wordnet and wordnet_ic for nltk:
 
 ```python
->>> import nltk
->>> nltk.download("wordnet")
->>> nltk.download("wordnet_ic")
+import nltk
+nltk.download("wordnet")
+nltk.download("wordnet_ic")
 ```
 
 Download gsii parser model for amrlib following 

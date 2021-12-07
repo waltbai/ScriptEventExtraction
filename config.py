@@ -7,15 +7,19 @@ def parse_args():
     parser = argparse.ArgumentParser(prog="ScriptExtraction")
     # Basic arguments
     parser.add_argument("--corp_dir", default="/home/jinxiaolong/bl/data/gigaword_eng_5",
-                        help="gigaword corpus directory")
+                        help="the decompressed directory of gigaword corpus")
     parser.add_argument("--work_dir", default="/home/jinxiaolong/bl/data/new_scripts",
-                        help="work directory and result directory")
+                        help="the directory to store dataset")
+    parser.add_argument("--start_year", default=1994, type=int,
+                        help="the start year of the corpus, used only in step 1")
+    parser.add_argument("--end_year", default=1994, type=int,
+                        help="the end year of the corpus, used only in step 1")
     parser.add_argument("--workers", default=1, type=int,
-                        help="workers to process files.")
+                        help="total number of processors, used in step 3 and 4")
     parser.add_argument("--worker_id", default=0, type=int,
-                        help="worker ID for this processor.")
+                        help="the worker id of this processor, used in step 3 and 4")
     parser.add_argument("--device", default=0, type=int,
-                        help="cuda device")
+                        help="the cuda device used by this processor, used in step 3 and 4")
     return parser.parse_args()
 
 
