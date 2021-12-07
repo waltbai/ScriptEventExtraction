@@ -24,6 +24,7 @@ def match_entity(head_idx, entities):
         return None, None
     for ent_id, entity in entities:
         for span in entity:
+            # Should use document index!
             if span[0] <= head_idx <= span[1]:
                 return ent_id, span
     return None, None
@@ -49,6 +50,12 @@ def merge_events_in_doc(amr_dir, align_dir, tokenized_dir, coref_dir, doc_name):
         tokenized_texts = f.read().split("\n")
     with open(os.path.join(align_dir, doc_name), "r") as f:
         align_texts = f.read().split("\n")
+    # Sentence offset
+    sent_offsets = []
+    cur_pos = 0
+    for sent in tokenized_texts:
+        sent_offsets.append(cur_pos)
+        cur_pos += len(sent)
     # Integrate
     sent_num = len(tokenized_texts)
     doc_events = []
@@ -56,6 +63,7 @@ def merge_events_in_doc(amr_dir, align_dir, tokenized_dir, coref_dir, doc_name):
         amr_text = amr_texts[sent_id]
         tokenized_text = tokenized_texts[sent_id]
         align_text = align_texts[sent_id]
+        sent_offset = sent_offsets[sent_id]
         # Process
         tokens = tokenized_text.split()
         align_info = convert_align_info(align_text)
@@ -65,13 +73,14 @@ def merge_events_in_doc(amr_dir, align_dir, tokenized_dir, coref_dir, doc_name):
         for event in events:
             event.sent_id = sent_id
             for role in event.roles:
-                head_idx = role.head_pos
-                ent_id, span = match_entity(head_idx, entities)
-                if ent_id is not None:
-                    # update span and value
-                    role.span = span
-                    role.value = tokens[span[0]:span[1]]
-                    role.ent_id = ent_id
+                if role.head_pos is not None:
+                    head_idx = role.head_pos + sent_offset
+                    ent_id, span = match_entity(head_idx, entities)
+                    if ent_id is not None:
+                        # update span and value
+                        role.span = span
+                        role.value = tokens[span[0]:span[1]]
+                        role.ent_id = ent_id
         doc_events.extend(events)
     return entities, doc_events
 

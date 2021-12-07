@@ -89,7 +89,7 @@ def parse(work_dir, batch_size=10, workers=1, worker_id=0, device=0):
     logger.info("\n{}".format("\n".join(error_files)))
 
 
-def align(work_dir):
+def align(work_dir, workers=1, worker_id=0):
     """Align amr graphs to sentences."""
     logger.info("Aligning amr graphs to sentences")
     # set directories
@@ -99,15 +99,23 @@ def align(work_dir):
         os.makedirs(align_dir)
     # map input and output paths
     in_paths, out_paths = map_input_output(amr_dir, align_dir)
+    in_paths = [_ for idx, _ in enumerate(in_paths) if (idx % workers) == worker_id]
+    out_paths = [_ for idx, _ in enumerate(out_paths) if (idx % workers) == worker_id]
+    # Filter parsed docs
+    process_in, process_out = [], []
+    for fin, fout in zip(in_paths, out_paths):
+        if not os.path.exists(fout):
+            process_in.append(fin)
+            process_out.append(fout)
     # align
     with tqdm(total=len(in_paths)) as pbar:
-        for in_fp, out_fp in zip(in_paths, out_paths):
+        for in_fp, out_fp in zip(process_in, process_out):
             with open(in_fp, "r") as f:
                 graphs = f.read().split("\n\n")
             align_results = []
             for graph_string in graphs:
                 result = align_graph(graph_string)
-                result = ret_val = "\t".join(["{} {}".format(i, s) for i, s in result])
+                result = "\t".join(["{} {}".format(i, s) for i, s in result])
                 align_results.append(result)
             with open(out_fp, "w") as f:
                 f.write("\n".join(align_results))
@@ -125,4 +133,6 @@ if __name__ == "__main__":
     #       workers=CONFIG.workers,
     #       worker_id=CONFIG.worker_id,
     #       device=CONFIG.device)
-    align(CONFIG.work_dir)
+    align(CONFIG.work_dir,
+          workers=CONFIG.workers,
+          worker_id=CONFIG.worker_id)

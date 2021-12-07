@@ -1,6 +1,7 @@
 """Step 4: Coreference resolution."""
 import logging
 import os
+import sklearn  # avoid error when import allennlp
 
 from allennlp.predictors import Predictor
 from tqdm import tqdm

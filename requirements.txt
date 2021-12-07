@@ -1,9 +1,8 @@
-setuptools~=41.2.0
 beautifulsoup4>=4.9.3
 tqdm>=4.59.0
 spacy>=3.0.6
 nltk==3.6.4
-amrlib>=0.5.1
+amrlib>=0.6.0
 allennlp==2.8.0
 allennlp_models==2.8.0
 sentencepiece>=0.1.91
