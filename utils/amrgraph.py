@@ -158,10 +158,10 @@ class AMRGraph:
         """Get event nodes (i.e., verbs)."""
         return [_ for _ in self.nodes if _.type == "verb"]
 
-    def find_node_by_id(self, short):
+    def find_node_by_id(self, id_):
         """Find node by id."""
-        if short in self.id2node:
-            return self.id2node[short]
+        if id_ in self.id2node:
+            return self.id2node[id_]
         else:
             return None
 
