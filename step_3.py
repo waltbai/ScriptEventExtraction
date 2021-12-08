@@ -128,11 +128,11 @@ if __name__ == "__main__":
                         level=logging.INFO)
     logging.getLogger("penman").setLevel(logging.CRITICAL)
     logging.getLogger("amrlib").setLevel(logging.CRITICAL)
-    # parse(CONFIG.work_dir,
-    #       batch_size=10,
-    #       workers=CONFIG.workers,
-    #       worker_id=CONFIG.worker_id,
-    #       device=CONFIG.device)
+    parse(CONFIG.work_dir,
+          batch_size=10,
+          workers=CONFIG.workers,
+          worker_id=CONFIG.worker_id,
+          device=CONFIG.device)
     align(CONFIG.work_dir,
           workers=CONFIG.workers,
           worker_id=CONFIG.worker_id)

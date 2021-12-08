@@ -72,21 +72,26 @@ def tokenize(work_dir, batch_size=100):
     if not os.path.exists(tokenized_dir):
         os.makedirs(tokenized_dir)
     in_paths, out_paths = map_input_output(raw_dir, tokenized_dir)
+    process_in, process_out = [], []
+    for fin, fout in zip(in_paths, out_paths):
+        if not os.path.exists(fout):
+            process_in.append(fin)
+            process_out.append(fout)
     # Tokenize documents in batches
-    tot_num = len(in_paths)
+    tot_num = len(process_in)
     batch_num = math.ceil(tot_num / batch_size)
     with tqdm(total=tot_num) as pbar:
         for batch_id in range(batch_num):
             # Read raw documents
             start_idx, end_idx = batch_id * batch_size, (batch_id+1) * batch_size
             in_docs = []
-            for fp in in_paths[start_idx:end_idx]:
+            for fp in process_in[start_idx:end_idx]:
                 with open(fp, "r") as f:
                     content = f.read()
                 in_docs.append(preprocess_text(content))
             # Tokenize
             out_docs = batch_tokenize_spacy(docs=in_docs, nlp=nlp)
-            for fp, content in zip(out_paths[start_idx:end_idx], out_docs):
+            for fp, content in zip(process_out[start_idx:end_idx], out_docs):
                 with open(fp, "w") as f:
                     f.write(content)
             pbar.update(len(in_docs))
