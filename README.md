@@ -31,7 +31,7 @@ nltk.download("wordnet")
 nltk.download("wordnet_ic")
 ```
 
-Download gsii parser model for amrlib following 
+Download spring parser model for amrlib following 
 [official instructions](https://amrlib.readthedocs.io/en/latest/install/).
 
 ## Dataset construct instructions
