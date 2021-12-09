@@ -50,24 +50,36 @@ The main arguments for each step are:
 ### Instructions
 Step 1: extract documents
 
-```python step_1.py --corp_dir <corp_dir> --work_dir <work_dir> --start_year <start_year> --end_year <end_year>```
+```bash
+python step_1.py --corp_dir <corp_dir> --work_dir <work_dir> --start_year <start_year> --end_year <end_year>
+```
 
 Step 2: tokenize documents
 
-```python step_2.py --work_dir <work_dir>```
+```bash
+python step_2.py --work_dir <work_dir>
+```
 
 Step 3: parse documents with amr parser
 
-```python step_3.py --work_dir <work_dir> --workers <workers> --worker_id <worker_id> --device <device>```
+```bash
+python step_3.py --work_dir <work_dir> --workers <workers> --worker_id <worker_id> --device <device>
+```
 
 Step 4: coreference resolution
 
-```python step_4.py --work_dir <work_dir> --workers <workers> --worker_id <worker_id> --device <device>```
+```bash
+python step_4.py --work_dir <work_dir> --workers <workers> --worker_id <worker_id> --device <device>
+```
 
 Step 5: extract events
 
-```python step_5.py --work_dir <work_dir>```
+```bash
+python step_5.py --work_dir <work_dir>
+```
 
 Step 6: build script
 
-```python step_6.py --work_dir <work_dir>```
+```bash
+python step_6.py --work_dir <work_dir>
+```
