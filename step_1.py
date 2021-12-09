@@ -20,7 +20,7 @@ def qualified_files(file_list, start_year=1994, end_year=2004):
             continue
         flag = False
         for year in range(start_year, end_year+1):
-            if fn.startswith("nyt_eng_{}".format(year)):
+            if fn.startswith(f"nyt_eng_{year}"):
                 flag = True
                 break
         if flag:
@@ -55,13 +55,13 @@ def extract_documents(corp_dir, work_dir, start_year=1994, end_year=2004):
                 dateline = doc.find("dateline")
                 text = doc.find("text").get_text()
                 # write to file
-                file_path = os.path.join(subdir, "{}.txt".format(doc_id))
+                file_path = os.path.join(subdir, f"{doc_id}.txt")
                 with open(file_path, "w") as f:
                     f.write(text)
                 # doc counter
                 total_docs += 1
             pbar.update(1)
-    logger.info("Totally {} docs extracted.".format(total_docs))
+    logger.info(f"Totally {total_docs} docs extracted.")
 
 
 if __name__ == "__main__":

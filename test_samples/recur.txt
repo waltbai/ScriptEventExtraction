@@ -1,0 +1,43 @@
+# ::snt Jailed without bail since June 17 in the slayings of his ex - wife and her friend , Simpson appeared in court Thursday looking more comfortable and rested than he has at any of his four prior court appearances .
+(z0 / appear-01
+      :ARG1 (z1 / person
+            :name (z2 / name
+                  :op1 "Simpson")
+            :ARG1-of (z3 / jail-01
+                  :ARG3 (z4 / slay-01
+                        :ARG1 (z5 / and
+                              :op1 (z6 / person
+                                    :ARG0-of (z7 / have-rel-role-91
+                                          :ARG1 z1
+                                          :ARG2 (z8 / wife)
+                                          :time (z9 / ex)))
+                              :op2 (z10 / person
+                                    :ARG0-of (z11 / have-rel-role-91
+                                          :ARG1 z6
+                                          :ARG2 (z12 / friend)))))
+                  :time (z13 / since
+                        :op1 (z14 / date-entity
+                              :day 17
+                              :month 6))
+                  :manner (z15 / bail-out-02
+                        :polarity -
+                        :ARG1 z1)))
+      :location (z16 / court)
+      :time (z17 / date-entity
+            :weekday (z18 / thursday))
+      :manner (z19 / look-02
+            :ARG0 z1
+            :ARG1 (z20 / and
+                  :op1 (z21 / comfortable-02
+                        :ARG1 z1)
+                  :op2 (z22 / rest-01
+                        :ARG1 z1)
+                  :ARG2-of (z23 / have-degree-91
+                        :ARG1 z1
+                        :ARG3 (z24 / more)
+                        :ARG4 (z25 / appear-01
+                              :quant 4
+                              :ARG1 z1
+                              :mod (z26 / any)
+                              :mod (z27 / court)
+                              :time (z28 / prior))))))

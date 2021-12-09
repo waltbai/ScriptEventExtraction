@@ -43,7 +43,7 @@ def coref_resolution(work_dir, model_path=None, workers=1, worker_id=0, device=0
                 result = model.predict_tokenized(tokenized_document=content)
                 clusters = result["clusters"]
                 result_str = "\n".join(
-                    ["\t".join(["{} {}".format(start, end+1) for start, end in chain])
+                    ["\t".join([f"{start} {end+1}" for start, end in chain])
                      for chain in clusters])
                 with open(out_fp, "w") as f:
                     f.write(result_str)

@@ -48,6 +48,7 @@ class AMRNode:
         self.pos = None
         # Unaccessible
         self._token_num = token_num
+        self._visit = False
         # Check type
         type_ = "concept"
         if VERB_FRAME_PATTERN.match(value):
@@ -103,6 +104,16 @@ class AMRNode:
                     break
         return start, end
 
+    @property
+    def visit(self):
+        """If this node is visited."""
+        return self._visit
+
+    @visit.setter
+    def visit(self, visit=False):
+        """Set visit status."""
+        self._visit = visit
+
     def add_relation(self, rel_type, tail):
         """Add a relation."""
         self.relations.setdefault(rel_type, []).append(tail)
@@ -120,9 +131,11 @@ class AMRNode:
 
     def update_scope_from_children(self):
         """Update scope from child nodes."""
+        # Must deal with loop!!!
+        self._visit = True
         # First, determine the scope of each child
         for child in self.children:
-            if isinstance(child, AMRNode):
+            if isinstance(child, AMRNode) and not child.visit:
                 child.update_scope_from_children()
         # Second, update scope to cover each child
         for child in self.children:
@@ -220,6 +233,8 @@ class AMRGraph:
             pass
         for idx, id_ in alignments:
             graph.find_node_by_id(id_).update_pos(idx)
+        for node in graph.nodes:
+            node.visit = False
         graph.root.update_scope_from_children()
         return graph
 

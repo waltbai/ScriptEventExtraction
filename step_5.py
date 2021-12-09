@@ -22,7 +22,7 @@ def match_entity(head_idx, entities):
     """Match event argument head with an entity."""
     if head_idx is None:
         return None, None
-    for ent_id, entity in entities:
+    for ent_id, entity in enumerate(entities):
         for span in entity:
             # Should use document index!
             if span[0] <= head_idx <= span[1]:
@@ -47,7 +47,7 @@ def merge_events_in_doc(amr_dir, align_dir, tokenized_dir, coref_dir, doc_name):
     with open(os.path.join(amr_dir, doc_name), "r") as f:
         amr_texts = f.read().split("\n\n")
     with open(os.path.join(tokenized_dir, doc_name), "r") as f:
-        tokenized_texts = f.read().split("\n")
+        tokenized_texts = f.read().strip().split("\n")
     with open(os.path.join(align_dir, doc_name), "r") as f:
         align_texts = f.read().split("\n")
     # Sentence offset
@@ -67,6 +67,9 @@ def merge_events_in_doc(amr_dir, align_dir, tokenized_dir, coref_dir, doc_name):
         # Process
         tokens = tokenized_text.split()
         align_info = convert_align_info(align_text)
+        print(tokens)
+        print(amr_text)
+        print(align_info)
         graph = AMRGraph.parse(amr_text, align_info, tokens)
         events = convert_amr_to_events(graph)
         # Merge

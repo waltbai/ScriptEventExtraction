@@ -84,9 +84,8 @@ def parse(work_dir, batch_size=10, workers=1, worker_id=0, device=0):
                 success_num += 1
         except (AttributeError, RuntimeError, IndexError, TypeError):
             error_files.append(fp_i)
-    logger.info("Totally {} docs succeeded, {} failed.".format(
-        success_num, len(error_files)))
-    logger.info("\n{}".format("\n".join(error_files)))
+    logger.info(f"Totally {success_num} docs succeeded, {len(error_files)} failed.")
+    logger.info("\n" + "\n".join(error_files))
 
 
 def align(work_dir, workers=1, worker_id=0):
@@ -115,7 +114,7 @@ def align(work_dir, workers=1, worker_id=0):
             align_results = []
             for graph_string in graphs:
                 result = align_graph(graph_string)
-                result = "\t".join(["{} {}".format(i, s) for i, s in result])
+                result = "\t".join([f"{i} {s}" for i, s in result])
                 align_results.append(result)
             with open(out_fp, "w") as f:
                 f.write("\n".join(align_results))

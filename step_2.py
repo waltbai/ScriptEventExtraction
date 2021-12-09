@@ -17,6 +17,7 @@ def preprocess_text(text):
     """Preprocess text before sentence segmentation."""
     text = text.replace("\n", " ")
     text = text.replace("``", "''")
+    text = text.strip()
     return text
 
 
@@ -63,7 +64,7 @@ def batch_tokenize_spacy(docs, nlp):
 def tokenize(work_dir, batch_size=100):
     """Tokenize documents."""
     exclude_components = ["tok2vec", "tagger", "parser", "attribute_ruler", "lemmatizer", "ner"]
-    nlp = spacy.load("en_core_web_lg", exclude=exclude_components)
+    nlp = spacy.load("en_core_web_sm", exclude=exclude_components)
     nlp.enable_pipe("senter")
     logger.info("Tokenizer loaded.")
     # Record all documents
