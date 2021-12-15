@@ -22,12 +22,16 @@ def match_entity(head_idx, entities):
     """Match event argument head with an entity."""
     if head_idx is None:
         return None, None
-    for ent_id, entity in enumerate(entities):
+    ent_id, ent_span = None, None
+    for idx, entity in enumerate(entities):
         for span in entity:
-            # Should use document index!
             if span[0] <= head_idx <= span[1]:
-                return ent_id, span
-    return None, None
+                if ent_span is None:
+                    ent_id, ent_span = idx, span
+                # Find the smallest coref span that contains the headword
+                elif ent_span[1] - ent_span[0] > span[1] - span[0]:
+                    ent_id, ent_span = idx, span
+    return ent_id, ent_span
 
 
 def merge_events_in_doc(amr_dir, align_dir, tokenized_dir, coref_dir, doc_name):
@@ -47,15 +51,22 @@ def merge_events_in_doc(amr_dir, align_dir, tokenized_dir, coref_dir, doc_name):
     with open(os.path.join(amr_dir, doc_name), "r") as f:
         amr_texts = f.read().split("\n\n")
     with open(os.path.join(tokenized_dir, doc_name), "r") as f:
-        tokenized_texts = f.read().strip().split("\n")
+        tokenized_texts = [sent.split() for sent in f.read().strip().split("\n")]
     with open(os.path.join(align_dir, doc_name), "r") as f:
         align_texts = f.read().split("\n")
     # Sentence offset
     sent_offsets = []
     cur_pos = 0
+    tot_tokens = []
     for sent in tokenized_texts:
         sent_offsets.append(cur_pos)
         cur_pos += len(sent)
+        tot_tokens.extend(sent)
+    # Get entity mention spans
+    doc_entities = []
+    for eid, ent in enumerate(entities):
+        mentions = [tot_tokens[span[0]:span[1]] for span in ent]
+        doc_entities.append(mentions)
     # Integrate
     sent_num = len(tokenized_texts)
     doc_events = []
@@ -65,11 +76,8 @@ def merge_events_in_doc(amr_dir, align_dir, tokenized_dir, coref_dir, doc_name):
         align_text = align_texts[sent_id]
         sent_offset = sent_offsets[sent_id]
         # Process
-        tokens = tokenized_text.split()
+        tokens = tokenized_text
         align_info = convert_align_info(align_text)
-        print(tokens)
-        print(amr_text)
-        print(align_info)
         graph = AMRGraph.parse(amr_text, align_info, tokens)
         events = convert_amr_to_events(graph)
         # Merge
@@ -80,12 +88,18 @@ def merge_events_in_doc(amr_dir, align_dir, tokenized_dir, coref_dir, doc_name):
                     head_idx = role.head_pos + sent_offset
                     ent_id, span = match_entity(head_idx, entities)
                     if ent_id is not None:
+                        # Reduce offset
+                        span = (span[0] - sent_offset, span[1] - sent_offset)
                         # update span and value
                         role.span = span
                         role.value = tokens[span[0]:span[1]]
                         role.ent_id = ent_id
+            # If the verb position cannot be found,
+            # set to sentence length
+            if event.verb_pos is None:
+                event.verb_pos = len(tokens)
         doc_events.extend(events)
-    return entities, doc_events
+    return doc_entities, doc_events
 
 
 def completeness_check(amr_dir, align_dir, tokenized_dir, coref_dir, doc_name):
@@ -106,10 +120,14 @@ def event_extraction(work_dir):
     tokenized_dir = os.path.join(work_dir, "tokenized")
     # Build amr graph
     for subdir in os.listdir(amr_dir):
+        # Prepare sub directory
         base_amr_dir = os.path.join(amr_dir, subdir)
         base_align_dir = os.path.join(align_dir, subdir)
         base_tokenized_dir = os.path.join(tokenized_dir, subdir)
         base_coref_dir = os.path.join(coref_dir, subdir)
+        base_event_dir = os.path.join(event_dir, subdir)
+        if not os.path.exists(base_event_dir):
+            os.makedirs(base_event_dir)
         for fn in os.listdir(base_amr_dir):
             # Completeness check
             flag = completeness_check(amr_dir=base_amr_dir,
@@ -123,7 +141,14 @@ def event_extraction(work_dir):
                                                        align_dir=base_align_dir,
                                                        coref_dir=base_coref_dir,
                                                        doc_name=fn)
-                print(events)
+                events = sorted(events, key=lambda x: (x.sent_id, x.verb_pos))
+                doc = {
+                    "doc_id": fn.replace(".txt", ""),
+                    "entities": entities,
+                    "events": [e.to_json() for e in events]
+                }
+                from pprint import pprint
+                pprint(doc)
                 input()
             else:
                 continue

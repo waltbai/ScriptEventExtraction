@@ -14,6 +14,8 @@ CONJUNCTION_FRAMES = ["and"]
 _exclude_components = ["tok2vec", "tagger", "parser",
                        "attribute_ruler", "lemmatizer", "ner"]
 TOKENIZER = spacy.load("en_core_web_sm", exclude=_exclude_components)
+# Filter alignments
+ALIGNMENT_FILTER = ["have-rel-role-91", "have-org-role-91"]
 
 
 def align_graph(graph):
@@ -226,13 +228,16 @@ class AMRGraph:
         # Construct graph
         root = id2node[g.top]
         graph = cls(root=root, nodes=nodes, id2node=id2node, tokens=tokens)
+        align_graph(text)
         # Compute scope
         if alignments is None:
             alignments = align_graph(text)
         else:
             pass
         for idx, id_ in alignments:
-            graph.find_node_by_id(id_).update_pos(idx)
+            node = graph.find_node_by_id(id_)
+            if node.value not in ALIGNMENT_FILTER:
+                node.update_pos(idx)
         for node in graph.nodes:
             node.visit = False
         graph.root.update_scope_from_children()

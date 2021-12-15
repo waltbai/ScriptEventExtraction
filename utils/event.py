@@ -28,6 +28,15 @@ class Role:
         _repr = f"-[{self.role}]->({self.concept}, {self.value}, {self.ent_id})"
         return _repr
 
+    def to_json(self):
+        """Convert to json object."""
+        return {
+            "role": self.role,
+            "value": self.value,
+            "concept": self.concept,
+            "ent_id": self.ent_id,
+        }
+
 
 class Event:
     """Event class."""
@@ -54,7 +63,7 @@ class Event:
     def __repr__(self):
         _repr = f"{self.pb_frame} ({self.sent_id}, {self.verb_pos})\n"
         for role in self.roles:
-            _repr += f"\t{role}"
+            _repr += f"\t{role}\n"
         return _repr
 
     def add_role(self, role, concept, value,
@@ -69,3 +78,14 @@ class Event:
                  span=span,
                  head_pos=head_pos,
                  ent_id=ent_id))
+
+    def to_json(self):
+        """Convert to json object."""
+        return {
+            "pb_frame": self.pb_frame,
+            # "fn_frame": self.fn_frame,
+            "verb_pos": self.verb_pos,
+            "sent_id": self.sent_id,
+            "roles": [r.to_json() for r in self.roles]
+        }
+
