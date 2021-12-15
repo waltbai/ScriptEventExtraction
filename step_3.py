@@ -58,7 +58,7 @@ def parse(work_dir, batch_size=10, workers=1, worker_id=0, device=0):
             docs = []
             for fp in process_in[start:end]:
                 with open(fp, "r") as f:
-                    content = f.read().splitlines()
+                    content = f.read().strip().splitlines()
                 docs.append(content)
             try:
                 results = batch_parse_amrlib(docs, parser)

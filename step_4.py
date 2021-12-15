@@ -35,7 +35,7 @@ def coref_resolution(work_dir, model_path=None, workers=1, worker_id=0, device=0
                 pbar.update()
                 continue
             with open(in_fp, "r") as f:
-                content = f.read().split()
+                content = f.read().strip().split()
             # Predict raw doc
             # result = model.predict(docuent=" ".join(content))
             # Predict tokenized doc
