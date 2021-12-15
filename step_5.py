@@ -1,6 +1,9 @@
 """Step 5: Event extraction."""
+import json
 import logging
 import os
+
+from tqdm import tqdm
 
 from config import CONFIG
 from utils.amrgraph import AMRGraph
@@ -70,14 +73,23 @@ def merge_events_in_doc(amr_dir, align_dir, tokenized_dir, coref_dir, doc_name):
     # Integrate
     sent_num = len(tokenized_texts)
     doc_events = []
+    print("doc_name: ", doc_name)
     for sent_id in range(sent_num):
         amr_text = amr_texts[sent_id]
-        tokenized_text = tokenized_texts[sent_id]
+        tokens = tokenized_texts[sent_id]
         align_text = align_texts[sent_id]
         sent_offset = sent_offsets[sent_id]
         # Process
-        tokens = tokenized_text
         align_info = convert_align_info(align_text)
+        print()
+        print("-----")
+        print("sent id:", sent_id)
+        print(len(tokens))
+        print(align_info)
+        print(tokens)
+        print(amr_text)
+        print("-----")
+        print()
         graph = AMRGraph.parse(amr_text, align_info, tokens)
         events = convert_amr_to_events(graph)
         # Merge
@@ -119,39 +131,40 @@ def event_extraction(work_dir):
     event_dir = os.path.join(work_dir, "event")
     tokenized_dir = os.path.join(work_dir, "tokenized")
     # Build amr graph
-    for subdir in os.listdir(amr_dir):
-        # Prepare sub directory
-        base_amr_dir = os.path.join(amr_dir, subdir)
-        base_align_dir = os.path.join(align_dir, subdir)
-        base_tokenized_dir = os.path.join(tokenized_dir, subdir)
-        base_coref_dir = os.path.join(coref_dir, subdir)
-        base_event_dir = os.path.join(event_dir, subdir)
-        if not os.path.exists(base_event_dir):
-            os.makedirs(base_event_dir)
-        for fn in os.listdir(base_amr_dir):
-            # Completeness check
-            flag = completeness_check(amr_dir=base_amr_dir,
-                                      tokenized_dir=base_tokenized_dir,
-                                      align_dir=base_align_dir,
-                                      coref_dir=base_coref_dir,
-                                      doc_name=fn)
-            if flag:
-                entities, events = merge_events_in_doc(amr_dir=base_amr_dir,
-                                                       tokenized_dir=base_tokenized_dir,
-                                                       align_dir=base_align_dir,
-                                                       coref_dir=base_coref_dir,
-                                                       doc_name=fn)
-                events = sorted(events, key=lambda x: (x.sent_id, x.verb_pos))
-                doc = {
-                    "doc_id": fn.replace(".txt", ""),
-                    "entities": entities,
-                    "events": [e.to_json() for e in events]
-                }
-                from pprint import pprint
-                pprint(doc)
-                input()
-            else:
-                continue
+    with tqdm() as pbar:
+        for subdir in os.listdir(amr_dir):
+            # Prepare sub directory
+            base_amr_dir = os.path.join(amr_dir, subdir)
+            base_align_dir = os.path.join(align_dir, subdir)
+            base_tokenized_dir = os.path.join(tokenized_dir, subdir)
+            base_coref_dir = os.path.join(coref_dir, subdir)
+            base_event_dir = os.path.join(event_dir, subdir)
+            if not os.path.exists(base_event_dir):
+                os.makedirs(base_event_dir)
+            for fn in os.listdir(base_amr_dir):
+                # Completeness check
+                flag = completeness_check(amr_dir=base_amr_dir,
+                                          tokenized_dir=base_tokenized_dir,
+                                          align_dir=base_align_dir,
+                                          coref_dir=base_coref_dir,
+                                          doc_name=fn)
+                if flag:
+                    entities, events = merge_events_in_doc(amr_dir=base_amr_dir,
+                                                           tokenized_dir=base_tokenized_dir,
+                                                           align_dir=base_align_dir,
+                                                           coref_dir=base_coref_dir,
+                                                           doc_name=fn)
+                    events = sorted(events, key=lambda x: (x.sent_id, x.verb_pos))
+                    doc = {
+                        "doc_id": fn.replace(".txt", ""),
+                        "entities": entities,
+                        "events": [e.to_json() for e in events]
+                    }
+                    with open(os.path.join(base_event_dir, fn), "w") as f:
+                        json.dump(doc, f)
+                else:
+                    pass
+                pbar.update(1)
 
 
 if __name__ == "__main__":

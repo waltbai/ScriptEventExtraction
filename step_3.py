@@ -19,7 +19,7 @@ def batch_parse_amrlib(docs, parser):
     spans = []
     sents = []
     for doc in docs:
-        spans.append((len(spans), len(doc)))
+        spans.append((len(sents), len(doc)))
         sents.extend(doc)
     graphs = parser.parse_sents(sents)
     results = []
@@ -62,7 +62,6 @@ def parse(work_dir, batch_size=10, workers=1, worker_id=0, device=0):
                 docs.append(content)
             try:
                 results = batch_parse_amrlib(docs, parser)
-                # results = batch_parse_transition(docs, parser)
                 for idx, fp in enumerate(process_out[start:end]):
                     with open(fp, "w") as f:
                         f.write(results[idx])
