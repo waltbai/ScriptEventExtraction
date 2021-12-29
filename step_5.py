@@ -73,7 +73,6 @@ def merge_events_in_doc(amr_dir, align_dir, tokenized_dir, coref_dir, doc_name):
     # Integrate
     sent_num = len(tokenized_texts)
     doc_events = []
-    print("doc_name: ", doc_name)
     for sent_id in range(sent_num):
         amr_text = amr_texts[sent_id]
         tokens = tokenized_texts[sent_id]
@@ -81,15 +80,6 @@ def merge_events_in_doc(amr_dir, align_dir, tokenized_dir, coref_dir, doc_name):
         sent_offset = sent_offsets[sent_id]
         # Process
         align_info = convert_align_info(align_text)
-        print()
-        print("-----")
-        print("sent id:", sent_id)
-        print(len(tokens))
-        print(align_info)
-        print(tokens)
-        print(amr_text)
-        print("-----")
-        print()
         graph = AMRGraph.parse(amr_text, align_info, tokens)
         events = convert_amr_to_events(graph)
         # Merge
@@ -142,6 +132,7 @@ def event_extraction(work_dir):
             if not os.path.exists(base_event_dir):
                 os.makedirs(base_event_dir)
             for fn in os.listdir(base_amr_dir):
+                pbar.set_description(f"Processing {fn}")
                 # Completeness check
                 flag = completeness_check(amr_dir=base_amr_dir,
                                           tokenized_dir=base_tokenized_dir,

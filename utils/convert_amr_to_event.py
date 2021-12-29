@@ -57,7 +57,9 @@ CORE_ROLE = re.compile(r":ARG\d+")
 def recognize_modalities(graph):
     """Remove modality verbs."""
     for h, r, t in graph.relations:
-        if h.type == "verb" and t.type == "verb" and CORE_ROLE.match(r):
+        if not isinstance(t, str) and \
+                h.type == "verb" and t.type == "verb" and \
+                CORE_ROLE.match(r):
             h.type = "modality"
 
 
@@ -79,6 +81,8 @@ def convert_amr_to_events(graph):
             verb_pos=verb_pos)
         for r in e.relations:
             for t in e.relations[r]:
+                if isinstance(t, str):
+                    continue
                 role = r
                 concept = t.value
                 span = t.span

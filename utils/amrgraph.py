@@ -1,26 +1,54 @@
 """Definition of AMR graph class."""
+import json
 import re
 
 import penman
 import spacy
 from amrlib.alignments.rbw_aligner import RBWAligner
-from amrlib.graph_processing.annotator import add_lemmas
+# from amrlib.graph_processing.annotator import add_lemmas
 from penman.models import noop
+from spacy.tokens import Doc
 
 VERB_FRAME_PATTERN = re.compile(r".+-\d+")
 STATIC_FRAMES = ["have-rel-role-91", "have-org-role-91"]
 CONJUNCTION_FRAMES = ["and"]
 # Tokenizer
-_exclude_components = ["tok2vec", "tagger", "parser",
-                       "attribute_ruler", "lemmatizer", "ner"]
+_exclude_components = ["parser"]
 TOKENIZER = spacy.load("en_core_web_sm", exclude=_exclude_components)
 # Filter alignments
 ALIGNMENT_FILTER = ["have-rel-role-91", "have-org-role-91"]
 
 
+def add_lemmas(graph):
+    """Add tokens and lemmas to penman graph."""
+    # Spacy may produce different result if snt is tokenized.
+    # For example, "I 'm" will be tokenized into "I ' m".
+    # So, do not use add_lemmas in amrlib if your snt is tokenized!!!
+    penman_graph = penman.decode(graph, model=noop.model)
+    snt = penman_graph.metadata["snt"]
+    penman_graph.metadata["tokens"] = json.dumps(snt.split())
+    # Use spacy to get lemmas
+    doc = Doc(TOKENIZER.vocab, words=snt.split())
+    for name, proc in TOKENIZER.pipeline:
+        doc = proc(doc)
+    lemmas = []
+    for t in doc:
+        if t.lemma_ == "-PRON-":
+            lemma = t.text.lower()
+        elif t.tag_.startswith("NNP") or t.ent_type_ not in ("", "O"):
+            lemma = t.text
+        else:
+            lemma = t.lemma_.lower()
+        lemmas.append(lemma)
+    # Add lemma
+    penman_graph.metadata["lemmas"] = json.dumps(lemmas)
+    return penman_graph
+
+
 def align_graph(graph):
     """Align single amr graph."""
-    penman_graph = add_lemmas(graph, snt_key='snt')
+    # penman_graph = add_lemmas(graph, snt_key='snt')
+    penman_graph = add_lemmas(graph)
     align_result = RBWAligner.from_penman_w_json(penman_graph)
     ret_val = []
     # Return in one line, "<index0> <short0>\t<index1> <short1>\t..."
@@ -38,12 +66,14 @@ class AMRNode:
     """Node in AMR graph."""
 
     def __init__(self,
-                 id_="",
-                 value="",
+                 id_=None,
+                 value=None,
                  relations=None,
                  token_num=None):
         # Accessible
+        id_ = id_ or ""
         self.id = id_
+        value = value or ""
         self.value = value
         self.relations = relations or {}
         self.scope = [False] * (token_num or 0)

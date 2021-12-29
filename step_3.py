@@ -106,7 +106,7 @@ def align(work_dir, workers=1, worker_id=0):
             process_in.append(fin)
             process_out.append(fout)
     # align
-    with tqdm(total=len(in_paths)) as pbar:
+    with tqdm(total=len(process_in)) as pbar:
         for in_fp, out_fp in zip(process_in, process_out):
             with open(in_fp, "r") as f:
                 graphs = f.read().split("\n\n")
@@ -126,11 +126,11 @@ if __name__ == "__main__":
                         level=logging.INFO)
     logging.getLogger("penman").setLevel(logging.CRITICAL)
     logging.getLogger("amrlib").setLevel(logging.CRITICAL)
-    parse(CONFIG.work_dir,
-          batch_size=10,
-          workers=CONFIG.workers,
-          worker_id=CONFIG.worker_id,
-          device=CONFIG.device)
+    # parse(CONFIG.work_dir,
+    #       batch_size=10,
+    #       workers=CONFIG.workers,
+    #       worker_id=CONFIG.worker_id,
+    #       device=CONFIG.device)
     align(CONFIG.work_dir,
           workers=CONFIG.workers,
           worker_id=CONFIG.worker_id)
