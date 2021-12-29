@@ -1,0 +1,288 @@
+"""Definition of AMR graph class."""
+import json
+import re
+
+import penman
+import spacy
+from amrlib.alignments.rbw_aligner import RBWAligner
+# from amrlib.graph_processing.annotator import add_lemmas
+from penman.models import noop
+from spacy.tokens import Doc
+
+VERB_FRAME_PATTERN = re.compile(r".+-\d+")
+STATIC_FRAMES = ["have-rel-role-91", "have-org-role-91"]
+CONJUNCTION_FRAMES = ["and"]
+# Tokenizer
+_exclude_components = ["parser"]
+TOKENIZER = spacy.load("en_core_web_sm", exclude=_exclude_components)
+# Filter alignments
+ALIGNMENT_FILTER = ["have-rel-role-91", "have-org-role-91"]
+
+
+def add_lemmas(graph):
+    """Add tokens and lemmas to penman graph."""
+    # Spacy may produce different result if snt is tokenized.
+    # For example, "I 'm" will be tokenized into "I ' m".
+    # So, do not use add_lemmas in amrlib if your snt is tokenized!!!
+    penman_graph = penman.decode(graph, model=noop.model)
+    snt = penman_graph.metadata["snt"]
+    penman_graph.metadata["tokens"] = json.dumps(snt.split())
+    # Use spacy to get lemmas
+    doc = Doc(TOKENIZER.vocab, words=snt.split())
+    for name, proc in TOKENIZER.pipeline:
+        doc = proc(doc)
+    lemmas = []
+    for t in doc:
+        if t.lemma_ == "-PRON-":
+            lemma = t.text.lower()
+        elif t.tag_.startswith("NNP") or t.ent_type_ not in ("", "O"):
+            lemma = t.text
+        else:
+            lemma = t.lemma_.lower()
+        lemmas.append(lemma)
+    # Add lemma
+    penman_graph.metadata["lemmas"] = json.dumps(lemmas)
+    return penman_graph
+
+
+def align_graph(graph):
+    """Align single amr graph."""
+    # penman_graph = add_lemmas(graph, snt_key='snt')
+    penman_graph = add_lemmas(graph)
+    align_result = RBWAligner.from_penman_w_json(penman_graph)
+    ret_val = []
+    # Return in one line, "<index0> <short0>\t<index1> <short1>\t..."
+    for i, t in enumerate(align_result.alignments):
+        if t is not None:
+            # t.triple: (short, ":instance", name)
+            ret_val.append((i, t.triple[0]))
+    # ret_val = "\t".join(["{} {}".format(i, s) for i, s in ret_val])
+    return ret_val
+
+
+# We define amr node/graph class instead of
+#   directly using penman graph for extensibility.
+class AMRNode:
+    """Node in AMR graph."""
+
+    def __init__(self,
+                 id_=None,
+                 value=None,
+                 relations=None,
+                 token_num=None):
+        # Accessible
+        id_ = id_ or ""
+        self.id = id_
+        value = value or ""
+        self.value = value
+        self.relations = relations or {}
+        self.scope = [False] * (token_num or 0)
+        self.pos = None
+        # Unaccessible
+        self._token_num = token_num
+        self._visit = False
+        # Check type
+        type_ = "concept"
+        if VERB_FRAME_PATTERN.match(value):
+            type_ = "verb"
+        if value in STATIC_FRAMES:
+            type_ = "static"
+        if value in CONJUNCTION_FRAMES:
+            type_ = "conjunction"
+        self.type = type_
+
+    def __repr__(self):
+        start, end = self.span
+        if start is None or end is None:
+            return f"({self.id},{self.value})"
+        else:
+            return f"({self.id},{self.value},{start}-{end})"
+
+    @property
+    def children(self):
+        """Return all children of this node."""
+        children = []
+        for r in self.relations:
+            for t in self.relations[r]:
+                children.append(t)
+        return children
+
+    @property
+    def head_idx(self):
+        """Return head word index."""
+        for i in range(len(self.scope))[::-1]:
+            if self.scope[i]:
+                return i
+        return None
+
+    @property
+    def span(self):
+        """Return rightmost continuous scope."""
+        start, end = None, None
+        # Continuity is a really strong constraint. Try discrete tolerant = 1 .
+        # This may be problematic for verbs, but usually work for entities.
+        skip = 0
+        tolerant = 1
+        for i in range(len(self.scope))[::-1]:
+            if end is None and self.scope[i]:
+                end = i + 1
+            if end is not None:
+                if self.scope[i]:
+                    skip = 0
+                    start = i
+                elif skip < tolerant:
+                    skip += 1
+                else:
+                    break
+        return start, end
+
+    @property
+    def visit(self):
+        """If this node is visited."""
+        return self._visit
+
+    @visit.setter
+    def visit(self, visit=False):
+        """Set visit status."""
+        self._visit = visit
+
+    def add_relation(self, rel_type, tail):
+        """Add a relation."""
+        self.relations.setdefault(rel_type, []).append(tail)
+
+    def remove_relation(self, rel_type, tail):
+        """Remove a relation."""
+        idx = self.relations[rel_type].index(tail)
+        del self.relations[rel_type][idx]
+
+    def update_pos(self, align_idx):
+        """Update node position with aligned token index."""
+        self.pos = align_idx
+        if len(self.scope) >= align_idx:
+            self.scope[align_idx] = True
+
+    def update_scope_from_children(self):
+        """Update scope from child nodes."""
+        # Must deal with loop!!!
+        self._visit = True
+        # First, determine the scope of each child
+        for child in self.children:
+            if isinstance(child, AMRNode) and not child.visit:
+                child.update_scope_from_children()
+        # Second, update scope to cover each child
+        for child in self.children:
+            if isinstance(child, AMRNode):
+                for i in range(len(self.scope)):
+                    self.scope[i] = self.scope[i] or child.scope[i]
+
+
+class AMRGraph:
+    """AMR graph class."""
+
+    def __init__(self,
+                 nodes=None,
+                 id2node=None,
+                 root=None,
+                 tokens=None):
+        self.nodes = nodes or []
+        self.id2node = id2node or {}
+        self.root = root or None
+        self.tokens = tokens or []
+
+    @property
+    def relations(self):
+        """Relation triple list."""
+        triples = []
+        for h in self.nodes:
+            for r in h.relations:
+                for t in h.relations[r]:
+                    triples.append((h, r, t))
+        return triples
+
+    def get_event_nodes(self):
+        """Get event nodes (i.e., verbs)."""
+        return [_ for _ in self.nodes if _.type == "verb"]
+
+    def find_node_by_id(self, id_):
+        """Find node by id."""
+        if id_ in self.id2node:
+            return self.id2node[id_]
+        else:
+            return None
+
+    def find_tokens_by_span(self, span):
+        """Find tokens by span."""
+        if self.tokens is not None:
+            start, end = span
+            if start is not None and end is not None:
+                return self.tokens[start: end]
+            else:
+                return None
+        else:
+            return None
+
+    def find_tokens_by_node(self, node):
+        """Find tokens by node."""
+        return self.find_tokens_by_span(node.span)
+
+    @classmethod
+    def parse(cls, text, alignments=None, tokens=None):
+        """Parse AMR graph from text."""
+        # Do not automatically convert relations
+        g = penman.decode(text, model=noop.model)
+        # Get tokens
+        if tokens is None and "snt" in g.metadata:
+            tokens = [_.text for _ in TOKENIZER(g.metadata["snt"])]
+        else:
+            pass
+        if tokens is not None:
+            token_num = len(tokens)
+        else:
+            token_num = None
+        # Construct nodes
+        nodes = []
+        id2node = {}
+        for id_, _, value in g.instances():
+            node = AMRNode(id_=id_, value=value, token_num=token_num)
+            nodes.append(node)
+            id2node.setdefault(id_, node)
+        # Construct relations
+        for h, r, t in g.edges():
+            head = id2node[h]
+            tail = id2node[t]
+            head.add_relation(r, tail)
+        # Construct attributes
+        for h, r, t in g.attributes():
+            head = id2node[h]
+            head.add_relation(r, t)
+        # Construct graph
+        root = id2node[g.top]
+        graph = cls(root=root, nodes=nodes, id2node=id2node, tokens=tokens)
+        align_graph(text)
+        # Compute scope
+        if alignments is None:
+            alignments = align_graph(text)
+        else:
+            pass
+        for idx, id_ in alignments:
+            node = graph.find_node_by_id(id_)
+            if node.value not in ALIGNMENT_FILTER:
+                node.update_pos(idx)
+        for node in graph.nodes:
+            node.visit = False
+        graph.root.update_scope_from_children()
+        return graph
+
+
+if __name__ == "__main__":
+    with open("../test_samples/amr.txt", "r") as f:
+        s = f.read()
+    g = AMRGraph.parse(s)
+    for v in g.nodes:
+        print(v)
+        print(" ".join(g.find_tokens_by_span(v.span)))
+    # for h, r, t in g.relations:
+    #     print(h, r, t)
+    # align = RBWAligner.from_penman_w_json(g)
+    # for t in align.alignments:
+    #     print(t)

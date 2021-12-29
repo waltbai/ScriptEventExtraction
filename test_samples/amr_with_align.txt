@@ -1,0 +1,44 @@
+# ::snt With the nation 's attention riveted again on a Los Angeles courtroom , a knife dealer testified that O.J. Simpson bought a 15 - inch knife five weeks before the slashing deaths of his ex - wife and her friend .
+# ::tokens ["With", "the", "nation", "'s", "attention", "riveted", "again", "on", "a", "Los", "Angeles", "courtroom", ",", "a", "knife", "dealer", "testified", "that", "O.J.", "Simpson", "bought", "a", "15", "-", "inch", "knife", "five", "weeks", "before", "the", "slashing", "deaths", "of", "his", "ex", "-", "wife", "and", "her", "friend", "."]
+# ::ner_tags ["O", "O", "O", "O", "O", "O", "O", "O", "O", "GPE", "GPE", "O", "O", "O", "O", "O", "O", "O", "PERSON", "PERSON", "O", "O", "QUANTITY", "QUANTITY", "QUANTITY", "O", "DATE", "DATE", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O"]
+# ::ner_iob ["O", "O", "O", "O", "O", "O", "O", "O", "O", "B", "I", "O", "O", "O", "O", "O", "O", "O", "B", "I", "O", "O", "B", "I", "I", "O", "B", "I", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O"]
+# ::pos_tags ["IN", "DT", "NN", "POS", "NN", "VBN", "RB", "IN", "DT", "NNP", "NNP", "NN", ",", "DT", "NN", "NN", "VBD", "IN", "NNP", "NNP", "VBD", "DT", "CD", "HYPH", "NN", "NN", "CD", "NNS", "IN", "DT", "VBG", "NNS", "IN", "PRP$", "NN", "NN", "NN", "CC", "PRP$", "NN", "."]
+# ::lemmas ["with", "the", "nation", "'s", "attention", "rivet", "again", "on", "a", "Los", "Angeles", "courtroom", ",", "a", "knife", "dealer", "testify", "that", "O.J.", "Simpson", "buy", "a", "15", "-", "inch", "knife", "five", "weeks", "before", "the", "slash", "death", "of", "his", "ex", "-", "wife", "and", "her", "friend", "."]
+(t / testify-01
+      :ARG0 (p / person
+            :ARG0-of (d / deal-01
+                  :ARG1 (k / knife)))
+      :ARG1 (b / buy-01
+            :ARG0 (p2 / person
+                  :name (n / name
+                        :op1 "O.J."
+                        :op2 "Simpson"))
+            :ARG1 (k2 / knife
+                  :mod (d2 / distance-quantity
+                        :quant 15
+                        :unit (ii / inch)))
+            :time (b2 / before
+                  :op1 (d3 / die-01
+                        :ARG1 (a / and
+                              :op1 (p3 / person
+                                    :ARG0-of (h / have-rel-role-91
+                                          :ARG1 p
+                                          :ARG2 (w / wife)
+                                          :time (e / ex)))
+                              :op2 (p4 / person
+                                    :ARG0-of (h2 / have-rel-role-91
+                                          :ARG1 p
+                                          :ARG2 (f / friend))))
+                        :manner (s / slash-01))
+                  :duration (t2 / temporal-quantity
+                        :quant 5
+                        :unit (w2 / week))))
+      :time (r / rivet-01
+            :ARG1 (a2 / attend-02
+                  :ARG0 (n2 / nation))
+            :ARG2 (c / courtroom
+                  :location (c2 / city
+                        :name (n3 / name
+                              :op1 "Los"
+                              :op2 "Angeles")))
+            :mod (a3 / again)))

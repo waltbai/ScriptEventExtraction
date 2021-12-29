@@ -1,0 +1,11 @@
+beautifulsoup4>=4.9.3
+lxml
+tqdm
+spacy==3.1.4
+nltk==3.6.4
+amrlib==0.6.0
+allennlp==2.8.0
+allennlp_models==2.8.0
+sentencepiece
+pyparsing
+Penman>=1.2.1
