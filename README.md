@@ -78,3 +78,8 @@ Step 5: extract events
 python step_5.py --work_dir <work_dir>
 ```
 
+Step 6: split data
+
+```bash
+python step_6.py --work_dir <work_dir>
+```
