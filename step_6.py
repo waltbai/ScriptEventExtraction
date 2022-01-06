@@ -17,10 +17,10 @@ def split_data(work_dir):
         duplicates = set([f"{fn}.txt" for fn in f.read().splitlines()])
     # Dev document list
     with open("data/dev.list", "r") as f:
-        dev_list = [f"{fn}.txt" for fn in f.read().splitlines()]
+        dev_list = set(f.read().splitlines())
     # Test document list.
     with open("data/test.list", "r") as f:
-        test_list = [f"{fn}.txt" for fn in f.read().splitlines()]
+        test_list = set(f.read().splitlines())
     # Dataset directories
     train_dir = os.path.join(work_dir, "rich_docs", "train")
     if not os.path.exists(train_dir):
@@ -33,6 +33,7 @@ def split_data(work_dir):
         os.makedirs(test_dir)
     # Split
     event_dir = os.path.join(work_dir, "event")
+    total_train, total_dev, total_test = 0, 0, 0
     with tqdm() as pbar:
         for root, dirs, files in os.walk(event_dir):
             for fn in files:
@@ -44,17 +45,18 @@ def split_data(work_dir):
                 # Save to corresponding directory
                 if fn in dev_list:
                     target_fp = os.path.join(dev_dir, fn)
+                    total_dev += 1
                 elif fn in test_list:
                     target_fp = os.path.join(test_dir, fn)
+                    total_test += 1
                 else:
                     target_fp = os.path.join(train_dir, fn)
+                    total_train += 1
                 copyfile(event_fp, target_fp)
                 pbar.update()
-
-
-def generate_questions(work_dir):
-    """Generate dev/test questions."""
-    pass
+    logging.info(f"Totally {total_train} train docs,"
+                 f"{total_dev} dev docs,"
+                 f"{total_test} test docs.")
 
 
 if __name__ == "__main__":
