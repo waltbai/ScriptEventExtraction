@@ -67,10 +67,10 @@ def recognize_modalities(graph):
 def convert_amr_to_events(graph):
     """Convert amr graph to event structure."""
     # Convert graph
-    filter_relations(graph)
     split_and_node(graph)
     recognize_modalities(graph)
     add_reverse_of_argn_of(graph)
+    filter_relations(graph)
     # # Export events
     events = []
     for e in graph.get_event_nodes():
