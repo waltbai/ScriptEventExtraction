@@ -29,17 +29,18 @@ def coref_resolution(work_dir, model_path=None, workers=1, worker_id=0, device=0
             process_in.append(fin)
             process_out.append(fout)
     # Predict
-    with tqdm(total=len(in_paths)) as pbar:
+    error_in_paths = []
+    error_out_paths = []
+    tot_num = len(process_in)
+    success_num = 0
+    with tqdm(total=len(process_in)) as pbar:
         for in_fp, out_fp in zip(process_in, process_out):
-            if os.path.exists(out_fp):
-                pbar.update()
-                continue
             with open(in_fp, "r") as f:
                 content = f.read().strip().split()
-            # Predict raw doc
-            # result = model.predict(docuent=" ".join(content))
-            # Predict tokenized doc
             try:
+                # Predict raw doc
+                # result = model.predict(docuent=" ".join(content))
+                # Predict tokenized doc
                 result = model.predict_tokenized(tokenized_document=content)
                 clusters = result["clusters"]
                 result_str = "\n".join(
@@ -47,16 +48,22 @@ def coref_resolution(work_dir, model_path=None, workers=1, worker_id=0, device=0
                      for chain in clusters])
                 with open(out_fp, "w") as f:
                     f.write(result_str)
+                success_num += 1
             except (RuntimeError, IndexError, ValueError):
-                pass
+                error_in_paths.append(in_fp)
+                error_out_paths.append(out_fp)
             pbar.update()
+    logging.info(f"Totally {success_num} docs succeeded, {len(error_in_paths)} failed.")
+    logging.info("\n" + "\n".join(error_in_paths))
 
 
 if __name__ == "__main__":
     logging.basicConfig(format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
                         level=logging.INFO)
     logging.getLogger("allennlp").setLevel(logging.CRITICAL)
+    coref_model_path = CONFIG.coref_model_path or None
     coref_resolution(CONFIG.work_dir,
+                     model_path=coref_model_path,
                      workers=CONFIG.workers,
                      worker_id=CONFIG.worker_id,
                      device=CONFIG.device)

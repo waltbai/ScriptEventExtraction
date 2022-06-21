@@ -16,4 +16,9 @@ def map_input_output(in_dir, out_dir):
     return in_paths, out_paths
 
 
+def normalize_frame(frame):
+    """Normalize frame expression.
 
+    'set-up-01  ==>  set_up.01'
+    """
+    return frame[::-1].replace("-", ".", 1).replace("-", "_")[::-1]
