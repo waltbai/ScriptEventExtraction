@@ -3,6 +3,7 @@ import re
 
 
 # Reserved relation patterns
+from utils.common import normalize_frame
 from utils.event import Event
 
 RESERVED_RELATIONS = {
@@ -45,7 +46,7 @@ def add_reverse_of_argn_of(graph):
     """
     p = re.compile(r":ARG\d+-of")
     for h, r, t in graph.relations:
-        if p.match(r):
+        if p.match(r) and not isinstance(t, str):
             new_r = r.replace("-of", "")
             t.add_relation(new_r, h)
             # h.remove_relation(r, t)
@@ -74,7 +75,7 @@ def convert_amr_to_events(graph):
     # # Export events
     events = []
     for e in graph.get_event_nodes():
-        pb_frame = e.value
+        pb_frame = normalize_frame(e.value)
         verb_pos = e.pos
         event = Event(
             pb_frame=pb_frame,

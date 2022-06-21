@@ -75,11 +75,11 @@ python step_4.py --work_dir <work_dir> --workers <workers> --worker_id <worker_i
 Step 5: extract events
 
 ```bash
-python step_5.py --work_dir <work_dir>
+python step_6.py --work_dir <work_dir>
 ```
 
 Step 6: split data
 
 ```bash
-python step_6.py --work_dir <work_dir>
+python step_7.py --work_dir <work_dir>
 ```

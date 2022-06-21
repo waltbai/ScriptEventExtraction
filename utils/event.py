@@ -42,20 +42,17 @@ class Event:
     """Event class."""
     def __init__(self,
                  pb_frame,
-                 fn_frame=None,
                  verb_pos=None,
                  sent_id=None,
                  roles=None):
         """Initialize an event.
 
         :param pb_frame: ProbBank Frame
-        :param fn_frame: FrameNet Frame
         :param verb_pos: verb position in sentence
         :param sent_id: sentence index
         :param roles: roles of this event
         """
         self.pb_frame = pb_frame
-        self.fn_frame = fn_frame
         self.verb_pos = verb_pos
         self.sent_id = sent_id
         self.roles = roles or []
@@ -83,7 +80,6 @@ class Event:
         """Convert to json object."""
         return {
             "pb_frame": self.pb_frame,
-            # "fn_frame": self.fn_frame,
             "verb_pos": self.verb_pos,
             "sent_id": self.sent_id,
             "roles": [r.to_json() for r in self.roles]
