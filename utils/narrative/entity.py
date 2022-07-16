@@ -42,22 +42,24 @@ def get_headword_for_mention(mention):
 class Entity:
     """Entity class."""
 
-    def __init__(self, mentions, ent_id):
+    def __init__(self, mentions, ent_id, head=None, salient_mention=None, concept=None):
         self.mentions = mentions
         self.ent_id = ent_id
-        self.head = self.get_head()
-        self.salient_mention = self.get_salient_mention()
+        self.head = head or self.get_head()
+        self.salient_mention = salient_mention or self.get_salient_mention()
+        self.concept = concept
 
     def to_json(self):
         return {
             "mentions": self.mentions,
             "ent_id": self.ent_id,
             "head": self.head,
-            "salient_mention": self.salient_mention
+            "salient_mention": self.salient_mention,
+            "concept": self.concept,
         }
 
     def __repr__(self):
-        return f"[{self.ent_id}, {self.head}, {self.salient_mention}]"
+        return f"[{self.ent_id}, {self.head}, {self.salient_mention}, {self.concept}]"
 
     def get_head(self):
         """Get mention head.
@@ -67,7 +69,8 @@ class Entity:
         entity_head_words = Counter()
         for mention in self.mentions:
             headword = get_headword_for_mention(mention)
-            entity_head_words.update([headword])
+            if headword != "None":
+                entity_head_words.update([headword])
         if len(entity_head_words):
             return entity_head_words.most_common()[0][0]
         else:

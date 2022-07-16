@@ -2,12 +2,14 @@
 import json
 import logging
 import os
+from collections import Counter
 
 from tqdm import tqdm
 
 from config import CONFIG
 from utils.amrgraph import AMRGraph
 from utils.convert_amr_to_event import convert_amr_to_events
+from utils.narrative.entity import Entity
 
 
 def convert_align_info(align_text):
@@ -69,7 +71,7 @@ def merge_events_in_doc(amr_dir, align_dir, tokenized_dir, coref_dir, doc_name):
     doc_entities = []
     for eid, ent in enumerate(entities):
         mentions = [tot_tokens[span[0]:span[1]] for span in ent]
-        doc_entities.append(mentions)
+        doc_entities.append(Entity(mentions=mentions, ent_id=eid))
     # Integrate
     sent_num = len(tokenized_texts)
     doc_events = []
@@ -101,6 +103,22 @@ def merge_events_in_doc(amr_dir, align_dir, tokenized_dir, coref_dir, doc_name):
             if event.verb_pos is None:
                 event.verb_pos = len(tokens)
         doc_events.extend(events)
+    # Update concept for each entity:
+    #   use the most common concept among all mentions
+    concepts = {}
+    for i in range(len(doc_entities)):
+        concepts.setdefault(i, Counter())
+    for event in doc_events:
+        for role in event.roles:
+            if role.ent_id is not None:
+                concepts[role.ent_id].update([role.concept])
+    for i in range(len(doc_entities)):
+        entity = doc_entities[i]
+        if len(concepts[i]) > 0:
+            concept = concepts[i].most_common()[0][0]
+        else:
+            concept = "None"
+        entity.concept = concept
     return doc_entities, doc_events
 
 
@@ -158,7 +176,7 @@ def event_extraction(work_dir):
                     events = [e for e in events if e.pb_frame in frame_list]
                     doc = {
                         "doc_id": fn.replace(".txt", ""),
-                        "entities": entities,
+                        "entities": [e.to_json() for e in entities],
                         "events": [e.to_json() for e in events]
                     }
                     with open(out_fp, "w") as f:

@@ -33,8 +33,7 @@ class Document:
         tokens = tokens or []
         doc.setdefault("tokens", tokens)
         doc_id = doc["doc_id"]
-        entities = [
-            Entity(mentions=m, ent_id=i) for i, m in enumerate(doc["entities"])]
+        entities = [Entity(**e) for e in doc["entities"]]
         events = [Event(**e) for e in doc["events"]]
         return cls(doc_id, entities, events)
 

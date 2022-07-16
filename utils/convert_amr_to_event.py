@@ -56,12 +56,14 @@ CORE_ROLE = re.compile(r":ARG\d+")
 
 
 def recognize_modalities(graph):
-    """Remove modality verbs."""
+    """Remove modality relations: verb as argument of verb."""
     for h, r, t in graph.relations:
-        if not isinstance(t, str) and \
-                h.type == "verb" and t.type == "verb" and \
-                CORE_ROLE.match(r):
-            h.type = "modality"
+        # if not isinstance(t, str) and \
+        #         h.type == "verb" and t.type == "verb" and \
+        #         CORE_ROLE.match(r):
+        #     h.type = "modality"
+        if not isinstance(t, str) and h.type == "verb" and t.type == "verb":
+            h.remove_relation(r, t)
 
 
 # Main
