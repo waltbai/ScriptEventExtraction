@@ -33,7 +33,7 @@ def parse_args():
                         help="the cuda device used by this processor, used in step 3 and 4")
     parser.add_argument("--seed", default=10000019, type=int,
                         help="the random seed when generating questions.")
-    parser.add_argument("--num_questions", default=5000, type=int,
+    parser.add_argument("--num_questions", default=10000, type=int,
                         help="number of questions to be sampled.")
     return parser.parse_args()
 

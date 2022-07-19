@@ -45,14 +45,17 @@ class Document:
             "events": [_.to_json() for _ in self.events],
         }
 
-    def get_chain_by_entity_id(self, entity):
+    def get_chain_by_entity_id(self, entity, stoplist=None):
         """Get chain by entity id."""
-        return [e for e in self.events if e.contains(entity)]
+        if stoplist is None:
+            return [e for e in self.events if e.contains(entity)]
+        else:
+            return [e for e in self.events if e.contains(entity) and e.predicate_gr(entity) not in stoplist]
 
     def get_chains(self, stoplist=None):
         """Get entities and chains."""
         for entity in self.entities:
-            yield entity, self.get_chain_by_entity_id(entity)
+            yield entity, self.get_chain_by_entity_id(entity, stoplist)
 
     def get_events(self, start_pos=None, end_pos=None):
         """Get events between start and end position."""

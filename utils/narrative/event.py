@@ -79,6 +79,10 @@ class Event:
                 return True
         return False
 
+    def predicate_gr(self, entity: Entity):
+        """Return (verb, role) tuple as predicate grammar role."""
+        return self.pb_frame, self.find_role(entity)
+
     def find_role(self, entity: Entity):
         """Find role for an entity."""
         for r in self.roles:
