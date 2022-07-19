@@ -72,14 +72,32 @@ Step 4: coreference resolution
 python step_4.py --work_dir <work_dir> --workers <workers> --worker_id <worker_id> --device <device>
 ```
 
-Step 5: extract events
+Step 5: extract propbank frame list
+
+```bash
+python step_5.py --work_dir <work_dir> --pb_dir <propbank_dir>
+```
+
+Step 6: extract events
 
 ```bash
 python step_6.py --work_dir <work_dir>
 ```
 
-Step 6: split data
+Step 7: split data
 
 ```bash
 python step_7.py --work_dir <work_dir>
+```
+
+Step 8: generate stop verb list
+
+```bash
+python step_8.py --work_dir <work_dir>
+```
+
+Step 9: generate eval questions
+
+```bash
+python step_9.py --work_dir <work_dir> --num_questions <num_questions>
 ```
