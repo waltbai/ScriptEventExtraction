@@ -31,6 +31,8 @@ nltk.download("wordnet")
 nltk.download("wordnet_ic")
 ```
 
+Download [propbank frames](https://github.com/propbank/propbank-frames).
+
 Download spring parser model for amrlib following 
 [official instructions](https://amrlib.readthedocs.io/en/latest/install/).
 
@@ -40,6 +42,7 @@ The main arguments for each step are:
 ```
 --corp_dir: the decompressed directory of gigaword corpus
 --work_dir: the directory to store dataset
+--pb_dir: the propbank frames directory
 --start_year: the start year of the corpus, used only in step 1
 --end_year: the end year of the corpus, used only in step 1
 --workers: total number of processors, used in step 3 and 4
@@ -66,11 +69,15 @@ Step 3: parse documents with amr parser
 python step_3.py --work_dir <work_dir> --workers <workers> --worker_id <worker_id> --device <device>
 ```
 
+Notice: Sadly, we manually set up multiple processes (workers) to do this step.
+
 Step 4: coreference resolution
 
 ```bash
 python step_4.py --work_dir <work_dir> --workers <workers> --worker_id <worker_id> --device <device>
 ```
+
+Notice: Sadly, we manually set up multiple processes (workers) to do this step.
 
 Step 5: extract propbank frame list
 

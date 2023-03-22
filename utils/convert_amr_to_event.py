@@ -12,7 +12,7 @@ RESERVED_RELATIONS = {
     ":op1", ":op2", ":op3", ":op4",     # operators
     ":location", ":destination", ":path",   # spatial
     ":instrument", ":manner", ":topic", ":medium",  # means
-    ":mod", ":poss",    # modifiers
+    ":mod", ":poss", ":polarity",    # modifiers
     # ":year", ":time", ":duration", ":decade", ":weekday",     # filter temporal
     # ":prep-",     # filter preposition
 }
@@ -84,13 +84,17 @@ def convert_amr_to_events(graph):
             verb_pos=verb_pos)
         for r in e.relations:
             for t in e.relations[r]:
-                if isinstance(t, str):
-                    continue
                 role = r
-                concept = t.value
-                span = t.span
-                head_pos = span[1] if span is not None else None
-                value = graph.find_tokens_by_span(span)
+                if isinstance(t, str):
+                    concept = t
+                    value = t
+                    span = None
+                    head_pos = None
+                else:   # t is node
+                    concept = t.value
+                    span = t.span
+                    head_pos = span[1] if span is not None else None
+                    value = graph.find_tokens_by_span(span)
                 event.add_role(
                     role=role,
                     concept=concept,
