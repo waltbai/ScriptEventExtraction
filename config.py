@@ -1,7 +1,7 @@
 import argparse
 
 
-USER_DIR = "/home/jinxiaolong"
+USER_DIR = "/home/jinxiaolong/bl/data"
 
 
 def parse_args():
@@ -9,21 +9,21 @@ def parse_args():
     # Load config files
     parser = argparse.ArgumentParser(prog="ScriptExtraction")
     # Basic arguments
-    parser.add_argument("--corp_dir", default=f"{USER_DIR}/bl/data/gigaword_eng_5",
+    parser.add_argument("--corp_dir", default=f"{USER_DIR}/gigaword_eng_5",
                         help="the decompressed directory of gigaword corpus")
-    parser.add_argument("--work_dir", default=f"{USER_DIR}/bl/data/new_scripts",
+    parser.add_argument("--work_dir", default=f"{USER_DIR}/new_scripts",
                         help="the directory to store dataset")
-    parser.add_argument("--pb_dir", default=f"{USER_DIR}/bl/data/propbank-frames",
+    parser.add_argument("--pb_dir", default=f"{USER_DIR}/propbank-frames",
                         help="the propbank frames directory")
-    parser.add_argument("--fn_dir", default=f"{USER_DIR}/bl/data/fndata-1.7",
+    parser.add_argument("--fn_dir", default=f"{USER_DIR}/fndata-1.7",
                         help="the framenet corpus directory")
     parser.add_argument("--coref_model_path",
                         # default=None,
-                        default=f"{USER_DIR}/bl/data/coref-spanbert-large-2021.03.10.tar.gz",
+                        default=f"{USER_DIR}/coref-spanbert-large-2021.03.10.tar.gz",
                         help="the local coref model path")
     parser.add_argument("--start_year", default=1994, type=int,
                         help="the start year of the corpus, used only in step 1")
-    parser.add_argument("--end_year", default=1994, type=int,
+    parser.add_argument("--end_year", default=1996, type=int,
                         help="the end year of the corpus, used only in step 1")
     parser.add_argument("--workers", default=1, type=int,
                         help="total number of processors, used in step 3 and 4")
