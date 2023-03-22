@@ -13,6 +13,7 @@ def stop_list(work_dir, num_verbs=10):
     """Generate stop list according to train documents."""
     event_dir = os.path.join(work_dir, "event")
     predicate_gr_counter = Counter()
+    polar_count = 0
     with tqdm() as pbar:
         for root, dirs, files in os.walk(event_dir):
             for fn in files:
@@ -20,6 +21,13 @@ def stop_list(work_dir, num_verbs=10):
                 doc = Document.from_file(fp)
                 for entity, chain in doc.get_chains():
                     predicate_gr_counter.update([event.predicate_gr(entity) for event in chain])
+                    # for event in chain:
+                    #     for role in event.roles:
+                    #         if role.role == ":polarity":
+                    #             polar_count += 1
+                    #             print(doc.doc_id)
+                    #             print(role)
+                    #             input()
                 pbar.update(1)
     result = predicate_gr_counter.most_common(num_verbs)
     stop_list_path = os.path.join(work_dir, "stoplist.txt")
