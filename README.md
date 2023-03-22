@@ -7,7 +7,7 @@ Then, it utilizes a coreference resolution tool to find coreferred entities.
 Finally, events are structured into graph/sequences via the coreference information.
 
 ## Corpus
-This code use NYT portion of Gigaword Corpus from year 1994 to 2004 as input.
+This code use NYT portion of Gigaword Corpus from year 1994 to 1996 as input.
 The corpus can be found in [LDC](https://catalog.ldc.upenn.edu/LDC2011T07).
 
 ## Installation
